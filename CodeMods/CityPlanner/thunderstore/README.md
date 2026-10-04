@@ -31,10 +31,29 @@ Behind the layout:
 ## How to play
 
 1. Install with r2modman or Gale (BepInExPack is installed for you).
-2. Launch the game once. Margin City is copied into your cities.
+2. Launch the game **from the mod manager** (*Start modded*). Margin City is copied into your cities.
 3. Start a **new game** and pick **Margin City** from the city list.
 
 Keep this mod installed while you play Margin City. The city is a size the game doesn't offer by itself, so it needs the mod to load.
+
+## Manual install (without a mod manager)
+
+**1. Install BepInEx (once).**
+- Download [BepInExPack_IL2CPP](https://thunderstore.io/c/shadows-of-doubt/p/BepInEx/BepInExPack_IL2CPP/) 6.0.755 with *Manual Download*.
+- Copy the **contents of its `BepInExPack` folder** into the game folder, next to `Shadows of Doubt.exe` (in Steam: right-click the game › *Manage* › *Browse local files*).
+- Launch the game from Steam once. **The first launch takes a few minutes** while BepInEx sets itself up (a console window fills with text). Quit once you reach the main menu.
+
+**2. Install Margin City.**
+- Download this mod with *Manual Download*.
+- Create the folder `BepInEx\plugins\MarginCity` in the game folder and copy **everything in the zip** into it, including the `Cities` folder.
+
+**3. Play.** Launch from Steam as usual and pick Margin City under *New Game*.
+
+Good to know:
+- **Updates are manual:** download the new version and replace the files.
+- **Turning mods off:** rename `winhttp.dll` in the game folder (for example to `winhttp.dll.off`) and the game starts without mods.
+- **Steam Deck / Linux (Proton):** also set the game's launch options to `WINEDLLOVERRIDES="winhttp=n,b" %command%`, or BepInEx won't load.
+- **Don't mix the two ways:** if you use r2modman or Gale, launch from the manager and don't also install BepInEx into the game folder.
 
 ## Margin City isn't in the city list?
 
