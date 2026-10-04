@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Added a note that the mod is made with the help of AI. No changes to the mod itself.
+
 ## 1.1.1
 
 - Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.

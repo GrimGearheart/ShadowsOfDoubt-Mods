@@ -13,7 +13,7 @@ namespace ScrollThrottle;
 /// The multiplier is applied on top of whatever speed the game asks for (Player.SetMaxSpeed),
 /// so crouching, injuries, air vents and speed sync disks keep working, just scaled.
 /// </summary>
-[BepInPlugin("sodmods.scrollthrottle", "Scroll Throttle", "1.1.1")]
+[BepInPlugin("sodmods.scrollthrottle", "Scroll Throttle", "1.1.2")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

@@ -1,6 +1,6 @@
 {
   "name": "SanitationDepartment",
-  "version_number": "1.1.1",
+  "version_number": "1.1.2",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/SanitationDepartment",
   "description": "Clean up the city for cash: trash rounds, a trash bag and litter picker, and crime scene cleanup. Bag the body, scrub the blood, get paid. Optional quiet mode where the killers take a break.",
   "dependencies": [

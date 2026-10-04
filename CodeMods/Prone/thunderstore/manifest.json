@@ -1,6 +1,6 @@
 {
   "name": "Prone",
-  "version_number": "1.0.1",
+  "version_number": "1.0.2",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/Prone",
   "description": "Lie down on the floor. Hold Crouch to get down low and look under desks, beds and dressers, or crawl slowly.",
   "dependencies": [

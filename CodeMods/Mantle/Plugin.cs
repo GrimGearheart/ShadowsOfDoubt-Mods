@@ -15,7 +15,7 @@ namespace Mantle;
 /// CharacterController.Move). While mantling, this mod runs that step itself: up to ledge height,
 /// then forward onto it, still through CharacterController.Move so walls can't be clipped through.
 /// </summary>
-[BepInPlugin("sodmods.mantle", "Mantle", "1.0.1")]
+[BepInPlugin("sodmods.mantle", "Mantle", "1.0.2")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

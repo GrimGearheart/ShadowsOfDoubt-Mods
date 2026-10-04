@@ -17,7 +17,7 @@ namespace DetectiveLicense;
 /// - Private Investigator License: permanent crime-scene access plus better odds when asking
 ///   "Can I come in and take a look around?", scaled by the resident's attitude to authority.
 /// </summary>
-[BepInPlugin(Guid, "Detective License", "1.1.1")]
+[BepInPlugin(Guid, "Detective License", "1.1.2")]
 [BepInDependency("Venomaus.SOD.Common")]
 public class Plugin : BasePlugin
 {

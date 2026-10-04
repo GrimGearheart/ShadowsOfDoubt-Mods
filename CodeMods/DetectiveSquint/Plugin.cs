@@ -14,7 +14,7 @@ namespace DetectiveSquint;
 /// The game only sets the field of view on startup and when settings change (from Game.fov), so the
 /// zoom is applied on top of that value and handed back exactly when released.
 /// </summary>
-[BepInPlugin("sodmods.detectivesquint", "Detective Squint", "1.0.1")]
+[BepInPlugin("sodmods.detectivesquint", "Detective Squint", "1.0.2")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

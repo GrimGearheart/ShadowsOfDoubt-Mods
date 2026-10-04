@@ -1,6 +1,6 @@
 {
   "name": "DetectiveSquint",
-  "version_number": "1.0.1",
+  "version_number": "1.0.2",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/DetectiveSquint",
   "description": "Hold Z to squint: your view zooms in smoothly so you can read signs, study faces and case windows from a distance.",
   "dependencies": [

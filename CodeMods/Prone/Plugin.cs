@@ -15,7 +15,7 @@ namespace Prone;
 /// mod shrinks the player's capsule and lowers the camera further, using the game's own
 /// Player.SetPlayerHeight / SetCameraHeight.
 /// </summary>
-[BepInPlugin("sodmods.prone", "Prone", "1.0.1")]
+[BepInPlugin("sodmods.prone", "Prone", "1.0.2")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

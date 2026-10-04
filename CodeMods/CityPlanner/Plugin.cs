@@ -17,7 +17,7 @@ namespace CityPlanner;
 /// population, districts (type, name, wealth) and the building on every tile. Pick "Planned city" in the
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.0.3")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.0.4")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

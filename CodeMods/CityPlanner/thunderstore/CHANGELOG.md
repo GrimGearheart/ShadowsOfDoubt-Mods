@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- Added a note that the mod is made with the help of AI, and a section on installing without a mod manager. No changes to the mod itself.
+
 ## 1.0.3
 
 - Fixed Margin City sometimes missing from the city list: the city file is now found wherever the mod manager unpacks it in the mod's folder.
