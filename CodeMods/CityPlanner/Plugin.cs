@@ -17,7 +17,7 @@ namespace CityPlanner;
 /// population, districts (type, name, wealth) and the building on every tile. Pick "Planned city" in the
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.0.2")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.0.3")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -77,22 +77,30 @@ public class Plugin : BasePlugin
     {
         try
         {
-            // BepInEx loads plugins without a file location, so find this mod's folder by its dll.
+            // BepInEx loads plugins without a file location, so find this mod's folder by its dll. Mod managers
+            // don't all keep the package's folders as they are, so the city files are searched for anywhere in
+            // the mod's folder (and, failing that, anywhere in the plugins folder).
             var dll = Directory.GetFiles(Paths.PluginPath, "CityPlanner.dll", SearchOption.AllDirectories).FirstOrDefault();
-            var source = dll == null ? null : Path.Combine(Path.GetDirectoryName(dll)!, "Cities");
-            if (source == null || !Directory.Exists(source))
-            {
-                Log.LogInfo("No bundled cities to install.");
-                return;
-            }
+            var modDir = dll == null ? null : Path.GetDirectoryName(dll);
+            var cities = modDir == null ? new string[0] : Directory.GetFiles(modDir, "*.citb", SearchOption.AllDirectories);
+            if (cities.Length == 0)
+                cities = Directory.GetFiles(Paths.PluginPath, "Margin City*.citb", SearchOption.AllDirectories);
+            Log.LogInfo($"Mod folder: {modDir ?? "not found"}. Bundled city files found: {cities.Length}");
+            if (cities.Length == 0) return;
+
             var target = Path.Combine(Application.persistentDataPath, "Cities");
             Directory.CreateDirectory(target);
-            foreach (var file in Directory.GetFiles(source))
+            foreach (var city in cities)
             {
-                var dest = Path.Combine(target, Path.GetFileName(file));
-                if (File.Exists(dest) && new FileInfo(dest).Length == new FileInfo(file).Length) continue;
-                File.Copy(file, dest, true);
-                Log.LogInfo("Installed city file " + Path.GetFileName(file));
+                // Each city comes with an info file of the same name (.txt) that the city list reads.
+                var info = Path.ChangeExtension(city, ".txt");
+                foreach (var file in File.Exists(info) ? new[] { city, info } : new[] { city })
+                {
+                    var dest = Path.Combine(target, Path.GetFileName(file));
+                    if (File.Exists(dest) && new FileInfo(dest).Length == new FileInfo(file).Length) continue;
+                    File.Copy(file, dest, true);
+                    Log.LogInfo("Installed city file " + Path.GetFileName(file) + " into " + target);
+                }
             }
         }
         catch (Exception e)

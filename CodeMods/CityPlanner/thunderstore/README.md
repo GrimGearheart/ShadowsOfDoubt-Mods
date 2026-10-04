@@ -36,6 +36,12 @@ Behind the layout:
 
 Keep this mod installed while you play Margin City. The city is a size the game doesn't offer by itself, so it needs the mod to load.
 
+## Margin City isn't in the city list?
+
+1. **Start the game from your mod manager** (r2modman or Gale: *Start modded*). Starting it straight from Steam doesn't load mods installed by a manager.
+2. **Still missing?** Copy the two `Margin City…` files (`.citb` and `.txt`) from the mod's folder into `%USERPROFILE%\AppData\LocalLow\ColePowered Games\Shadows of Doubt\Cities`, then restart. In r2modman, *Settings › Browse profile folder* opens the mod folders (look in `BepInEx/plugins`).
+3. If that doesn't help, send us your `BepInEx/LogOutput.log` (search it for "City Planner").
+
 ## Make your own planned city
 
 The mod includes the **City Planner** that built Margin City. Put a plan in `BepInEx/config/cityplan.txt` and choose **"Planned city"** as the size when generating a new city. The game builds your layout: districts, wealth, a building on every block and which way each one faces. It still generates the streets, interiors and residents itself. Margin City's own plan is included as `cityplan.example.txt` to start from. Without a plan file, city generation is unchanged.
