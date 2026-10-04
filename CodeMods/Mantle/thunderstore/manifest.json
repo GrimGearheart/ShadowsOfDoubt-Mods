@@ -1,7 +1,7 @@
 {
   "name": "Mantle",
   "version_number": "1.0.1",
-  "website_url": "",
+  "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/Mantle",
   "description": "Climb and vault. Jump at a ledge and haul yourself onto dumpsters, crates, cars and vending machines, or vault over fences and railings.",
   "dependencies": [
     "BepInEx-BepInExPack_IL2CPP-6.0.755"

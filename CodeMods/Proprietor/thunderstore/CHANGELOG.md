@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.
+
 ## 1.0.0
 
 First release.

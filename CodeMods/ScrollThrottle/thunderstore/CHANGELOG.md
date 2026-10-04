@@ -2,7 +2,7 @@
 
 ## 1.1.1
 
-- Added a "Safe to remove?" note to the description. No changes to the mod itself.
+- Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.
 
 ## 1.1.0
 - Removed the middle-click reset: middle mouse is the game's flashlight toggle. Existing configs using it are switched to no reset key (you can set another key).

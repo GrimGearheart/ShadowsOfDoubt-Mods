@@ -2,7 +2,7 @@
 
 ## 1.1.1
 
-- Added a "Safe to remove?" note to the description. No changes to the mod itself.
+- Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.
 
 ## 1.1.0
 - New: a Credentials card on the pause menu shows your license and any crime scene permits still running, with the time left. Shared with The Protectorate's other mods: Sanitation Department adds its own section to the same card.

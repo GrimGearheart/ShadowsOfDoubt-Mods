@@ -2,7 +2,7 @@
 
 ## 1.1.1
 
-- Added a "Safe to remove?" note to the description. No changes to the mod itself.
+- Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.
 
 ## 1.1.0
 - New: **crime scene cleanup.** Get certified at City Hall. While you're on sanitation full-time, residents are found dead around the city; the Enforcers investigate, then release the scene to you. Bag the body, mop up the blood pool and scrub the spatter, and you're paid when it's clean. The coroner collects the body and the landlord clears out the flat once you've left.
