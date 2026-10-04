@@ -49,6 +49,8 @@ public class Business
     public Dictionary<string, int> Stock { get; set; } = new();
     public List<Order> Orders { get; set; } = new();
     public List<Transfer> Transfers { get; set; } = new();
+    /// <summary>Rooms whose ceiling you've painted (their ceiling glow follows the Multiply colour).</summary>
+    public List<int> PaintedCeilings { get; set; } = new();
     public List<Sale> Sales { get; set; } = new();
 }
 

@@ -27,6 +27,15 @@ Every sale is real. When a citizen orders a burger at your diner, the money goes
 - **Wages.** At midnight your staff are paid out of the till. If the till is short, the rest comes from your wallet.
 - **Selling.** Changed your mind? Tell the manager, or staff on shift, that you want to sell. You get back 60% of what you paid, plus whatever's in the till.
 
+## Making it yours
+
+- **Decorate.** Inside a business you own, the **Edit Decor** button works just like at home (sandbox games, or the story once you have your apartment). Repaint walls, floors and ceilings room by room, and buy and place your own furniture.
+- **The fittings stay.** Counters, registers, tables, seats, menu boards and the rest are what your staff and customers use, so they can't be moved, stored or sold. Litter, junk and cardboard boxes can be cleared out.
+- **Lit ceilings.** Some places, like diners, have glowing ceiling panels. Paint one and it glows in the Multiply colour you choose; pick black to switch the glow off.
+- **The staff know who you are.** Waiters, bar staff and counter staff greet you as their boss. Not enthusiastically.
+
+Shared spaces next door, like a building's public bathrooms, aren't part of your business and can't be decorated.
+
 ## The Business Ledger
 
 A new program on the cruncher, in two places:
@@ -42,7 +51,7 @@ A new program on the cruncher, in two places:
 
 ## What's next
 
-This release is the foundation. Planned:
+Planned for future versions:
 - **Shops.** Pawn shops, hardware stores and other retail. The game has no errand that sends citizens shopping there, so they need new shoppers first.
 - **Supermarkets.** Grocery runs are rare in the game, so they need a different kind of deal to be worth owning.
 - **Deliveries you can see** arriving at the door.
@@ -70,7 +79,7 @@ After the first launch, edit `BepInEx/config/sodmods.proprietor.cfg` (or use r2m
 
 ## Safe to remove?
 
-**Yes.** What you own is kept in a small file next to each save, not in the save itself. Without the mod your businesses simply go back to their owners. Money earned or spent stays, and the keys you were given stay on your keyring.
+**Yes.** What you own is kept in a small file next to each save, not in the save itself. Without the mod your businesses simply go back to their owners. Money earned or spent stays, and the keys you were given stay on your keyring. Decorating you've done stays too (the game saves it with the rooms), and lit ceilings you painted go back to glowing white.
 
 ## Compatibility
 

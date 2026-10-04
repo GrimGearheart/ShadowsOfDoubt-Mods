@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- **Decorate your businesses.** The Edit Decor button now works inside businesses you own: repaint walls, floors and ceilings, and buy and place your own furniture. The business's own fittings (counters, registers, tables, menu boards...) stay where they are, but litter, junk and cardboard boxes can be cleared out.
+- **Lit ceilings take your colour.** Diner-style glowing ceilings now glow in the Multiply colour you paint them (black for no glow), instead of turning white again when the lights come on.
+- **Staff call you boss.** Waiters, bar staff and counter staff at your businesses greet you as their boss ("Morning, boss.").
+- Removed a research setting that was left in 1.0.
+
 ## 1.0.2
 
 - Added a note that the mod is made with the help of AI. No changes to the mod itself.

@@ -13,7 +13,7 @@ namespace Proprietor;
 /// earn money into the till, use up stock, and you run it all from the "Business Ledger" program on the
 /// business's cruncher: collect the till, check stock, order more (delivered in a few days), see every sale.
 /// </summary>
-[BepInPlugin(Guid, "Under New Management", "1.0.0")]
+[BepInPlugin(Guid, "Under New Management", "1.1.0")]
 [BepInDependency("Venomaus.SOD.Common")]
 public class Plugin : BasePlugin
 {
@@ -53,13 +53,16 @@ public class Plugin : BasePlugin
         TestDeliveryHours = Config.Bind("Debug", "TestDeliveryHours", -1f,
             "Testing: orders arrive this many in-game hours after you place them (orders already on the way are brought forward when a save loads). -1 = off.");
 
+        Lib.SaveGame.OnBeforeLoad += (_, _) => DecorPatch.Return();
         Lib.SaveGame.OnAfterLoad += (_, args) => Store.Load(args);
+        // A business lent to the decor editor is never saved as one of your apartments.
+        Lib.SaveGame.OnBeforeSave += (_, _) => DecorPatch.Return();
         Lib.SaveGame.OnAfterSave += (_, args) => Store.Save(args);
-        Lib.SaveGame.OnBeforeNewGame += (_, _) => Store.Clear();
+        Lib.SaveGame.OnBeforeNewGame += (_, _) => { DecorPatch.Return(); Store.Clear(); };
 
-        Dialogs.Register();
-        BossGreetingPatch.Register();
+        // Patches first, so a problem setting up anything else can't leave the mod half-loaded.
         new Harmony(Guid).PatchAll(typeof(Plugin).Assembly);
+        Dialogs.Register();
         Log.LogInfo("Under New Management loaded");
     }
 
