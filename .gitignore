@@ -1,0 +1,35 @@
+# Only the released mods, their shared code and the build tools are published.
+# Everything else in this folder (decompiled game code, saved copies of the official docs,
+# experiments and debug tools) stays local.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+
+!/CodeMods/
+/CodeMods/*
+!/CodeMods/ScrollThrottle/
+!/CodeMods/DetectiveSquint/
+!/CodeMods/Mantle/
+!/CodeMods/Prone/
+!/CodeMods/DetectiveLicense/
+!/CodeMods/SanitationDepartment/
+!/CodeMods/CityPlanner/
+!/CodeMods/Proprietor/
+!/CodeMods/Shared/
+
+!/tools/
+/tools/*
+!/tools/package_thunderstore.py
+!/tools/make_icon.py
+!/tools/city_map.py
+!/tools/city_names.py
+!/tools/city_overview.py
+!/tools/city-planner.html
+
+# Build output and packaged zips
+bin/
+obj/
+dist/
+*.user
+.vs/

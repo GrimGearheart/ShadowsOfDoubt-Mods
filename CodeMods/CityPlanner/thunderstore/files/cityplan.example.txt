@@ -1,0 +1,41 @@
+# City plan for City Planner (Margin City's own layout, as an example).
+
+[City]
+Size = 9x10
+Population = 0.75
+
+# Districts: letter = name | district type | land value | density
+[Districts]
+H = The Heights  | Residential | high     | medium
+T = Park Terrace | Residential | high     | medium
+D = Downtown     | CBD         | veryHigh | veryHigh
+C = Chinatown    | Chinatown   | medium   | high
+R = Red Light    | RedLight    | low      | high
+B = The Bricks   | Residential | veryLow  | veryHigh
+S = West Stacks  | Industrial  | veryLow  | medium
+A = East Stacks  | Industrial  | veryLow  | medium
+
+[Buildings]
+CH = CityHall
+HO = Hotel
+ET = EdenTower
+OF = OneFIfthAve
+BN = BrandyNetherland
+TH = Townhouse
+TS = TownhouseShops
+SH = ShantyTown
+DI = AmericanDiner
+MI = MixedIndustrial
+CP = ChemicalPlant
+PK = Park
+
+# North at the top. Cell = District:Building, optional front /N /E /S /W.
+[Map]
+H:TH H:OF H:TH/E T:PK T:TH/W T:OF T:TH
+H:TH H:TH H:TH/E H:PK T:TH/W T:TH T:TH
+D:BN/S D:OF/S D:ET/S D:CH/S D:ET/S D:OF/S D:BN/S
+D:PK D:PK D:PK D:PK D:PK D:PK D:PK
+C:TS/N C:TS/N C:TS/N D:PK B:TS/N B:TS/N B:TS/N
+C:SH C:BN/N C:TS/E R:DI/N B:SH/W B:MI B:SH
+C:SH C:SH C:TS/E R:MI B:SH/W B:MI B:SH
+S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP

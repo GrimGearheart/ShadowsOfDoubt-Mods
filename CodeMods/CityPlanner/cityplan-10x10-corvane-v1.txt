@@ -1,0 +1,47 @@
+# City plan for City Planner.
+# Generating a new city at the plan's size ("Planned city" in the size dropdown) builds this layout.
+# Lines starting with # are ignored.
+
+[City]
+Size = 10x10
+Population = 0.75
+
+# Districts: letter = name | district type | land value | density
+#   Types: Residential, CBD, Chinatown, RedLight, Industrial
+#   Land value: veryLow, low, medium, high, veryHigh     Density: low, medium, high, veryHigh
+[Districts]
+H = The Heights  | Residential | high     | medium
+T = Park Terrace | Residential | high     | medium
+D = Downtown     | CBD         | veryHigh | veryHigh
+C = Chinatown    | Chinatown   | medium   | high
+R = Red Light    | RedLight    | low      | high
+B = Brickrow     | Residential | veryLow  | veryHigh
+S = The Stacks   | Industrial  | veryLow  | medium
+
+# Building codes used in the map below.
+[Buildings]
+CH = CityHall
+HO = Hotel
+ET = EdenTower
+OF = OneFIfthAve
+BN = BrandyNetherland
+TH = Townhouse
+TS = TownhouseShops
+SH = ShantyTown
+PK = Park
+DI = AmericanDiner
+MI = MixedIndustrial
+CP = ChemicalPlant
+
+# The buildable interior, north at the top, west on the left. Each cell is District:Building,
+# optionally with a facing (the side the front door is on): /N, /E, /S or /W, e.g. D:CH/S.
+# The coastline ring around it is filled in automatically (each coast tile joins the nearest district).
+[Map]
+H:TH H:OF H:TH H:TH T:PK T:TH T:OF T:TH
+H:OF H:TH H:TS H:TH T:TH T:TS T:TH T:OF
+D:OF D:ET D:HO D:CH/S D:OF D:ET D:BN D:OF
+D:PK D:PK D:PK D:PK D:PK D:PK D:PK D:PK
+C:TS C:TS C:TS R:TS R:BN B:SH B:BN B:SH
+C:TS C:BN C:TS R:DI R:TS B:SH B:PK B:SH
+C:TS C:TS C:TH R:MI R:MI B:SH B:BN B:SH
+S:CP S:MI S:MI S:DI S:CP S:MI S:MI S:CP

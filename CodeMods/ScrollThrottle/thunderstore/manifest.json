@@ -1,0 +1,9 @@
+{
+  "name": "ScrollThrottle",
+  "version_number": "1.1.1",
+  "website_url": "",
+  "description": "Star Citizen-style throttle: scroll the mouse wheel to set your movement speed (20%-150%). Stacks with crouching, injuries and sync disks.",
+  "dependencies": [
+    "BepInEx-BepInExPack_IL2CPP-6.0.755"
+  ]
+}

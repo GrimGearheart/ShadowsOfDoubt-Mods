@@ -1,0 +1,10 @@
+{
+  "name": "DetectiveLicense",
+  "version_number": "1.1.1",
+  "website_url": "",
+  "description": "Buy a crime scene permit or a private investigator's license at City Hall. Legal access to open murder cases, and residents are more likely to let you look around.",
+  "dependencies": [
+    "BepInEx-BepInExPack_IL2CPP-6.0.755",
+    "Venomaus-SODCommon-2.1.5"
+  ]
+}

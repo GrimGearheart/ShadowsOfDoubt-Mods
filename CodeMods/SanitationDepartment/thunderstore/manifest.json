@@ -1,0 +1,10 @@
+{
+  "name": "SanitationDepartment",
+  "version_number": "1.1.1",
+  "website_url": "",
+  "description": "Clean up the city for cash: trash rounds, a trash bag and litter picker, and crime scene cleanup. Bag the body, scrub the blood, get paid. Optional quiet mode where the killers take a break.",
+  "dependencies": [
+    "BepInEx-BepInExPack_IL2CPP-6.0.755",
+    "Venomaus-SODCommon-2.1.5"
+  ]
+}

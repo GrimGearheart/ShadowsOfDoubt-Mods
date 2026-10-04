@@ -1,0 +1,10 @@
+{
+    "cityName": "Margin City",
+    "build": "42.04",
+    "shareCode": "Margin City.5.4204.HS8UjLB1149V2ikb",
+    "citySize": {
+        "x": 9.0,
+        "y": 10.0
+    },
+    "population": 985
+}
