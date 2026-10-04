@@ -2,13 +2,15 @@
 
 Each mod keeps its package files in <project>/thunderstore/:
     manifest.json, icon.png (256x256), README.md, CHANGELOG.md, and optionally files/ (extra files to ship)
-The zip is written to <project>/thunderstore/dist/<name>-<version>.zip
+The zip is written to <project>/thunderstore/dist/<name>-<version>.zip, and a copy goes to Releases/ at the
+top of the repository (replacing that mod's previous zip there), so every upload-ready package is in one place.
 
 Usage: python tools/package_thunderstore.py CodeMods/<ModName>
 """
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import zipfile
@@ -56,3 +58,12 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
             full = os.path.join(root, f)
             z.write(full, os.path.relpath(full, extra).replace(os.sep, "/"))
 print("Packaged", out)
+
+# One folder with the latest package of every mod, ready to upload (kept out of git).
+releases = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Releases")
+os.makedirs(releases, exist_ok=True)
+for old in os.listdir(releases):
+    if re.fullmatch(re.escape(manifest["name"]) + r"-\d+\.\d+\.\d+\.zip", old):
+        os.remove(os.path.join(releases, old))
+shutil.copy2(out, releases)
+print("Copied to", releases)

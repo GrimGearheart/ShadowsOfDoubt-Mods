@@ -37,8 +37,8 @@ Only needed when the mod saves something new or changes what it saves.
 
 ## 5. Package and publish
 
-- [ ] 🤖 **Package:** `python tools/package_thunderstore.py CodeMods/<Mod>` makes the zip in `thunderstore/dist`.
-- [ ] 🎮 **Upload** the zip to Thunderstore as a new version of the mod.
+- [ ] 🤖 **Package:** `python tools/package_thunderstore.py CodeMods/<Mod>` makes the zip in `thunderstore/dist` and copies it to `Releases/` (one current zip per mod, not published to GitHub).
+- [ ] 🎮 **Upload** the zip from `Releases/` to Thunderstore as a new version of the mod.
 - [ ] 🤖 **GitHub:** commit the changes and push, so the source matches the release.
 - [ ] 🎮 **Tell people:** post the update on Discord ("In the base game…" / **With this mod:** / link). For bug fixes, reply to whoever reported it and remind them to **update in their mod manager**. Installed mods don't update by themselves.
 
