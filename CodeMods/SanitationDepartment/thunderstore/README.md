@@ -94,3 +94,7 @@ The game's own **Street Cleaner** sync disk still works and stacks: you're paid 
 ## Feedback
 
 Found something that should (or shouldn't) count as junk? Turn on `Debug.LogItems`, look at the item, and include `BepInEx/LogOutput.log` in your comment on the Thunderstore page.
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

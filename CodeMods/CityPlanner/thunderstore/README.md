@@ -78,3 +78,7 @@ The mod includes the **City Planner** that built Margin City. Put a plan in `Bep
 ## Feedback
 
 Found something odd in the city, or a name that doesn't fit? Leave a comment on the Thunderstore page.
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

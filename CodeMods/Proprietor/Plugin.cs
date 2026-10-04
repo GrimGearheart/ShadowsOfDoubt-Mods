@@ -23,7 +23,7 @@ public class Plugin : BasePlugin
     internal static ConfigEntry<int> BasePrice, PricePerRegular, StartingStock, OrderSize, WagePerStaff, MinDeliveryDays, MaxDeliveryDays;
     internal static ConfigEntry<float> WholesaleShare, TransferFee, TransferHour, TypicalMenuPrice, SellBackShare;
     internal static ConfigEntry<int> LowStock;
-    internal static ConfigEntry<bool> LogEachSale, ProbeShops;
+    internal static ConfigEntry<bool> LogEachSale;
     internal static ConfigEntry<int> TestStock;
     internal static ConfigEntry<float> TestDeliveryHours;
 
@@ -48,8 +48,6 @@ public class Plugin : BasePlugin
         TransferHour = Config.Bind("Remote", "TransferArrivalHour", 8f, "Hour of the next morning the courier arrives with the money.");
         WagePerStaff = Config.Bind("Running", "WagePerStaff", 8, "Paid out of the till every in-game day, per job at the business.");
         LogEachSale = Config.Bind("Debug", "LogEachSale", false, "Write every sale at a business to the log.");
-        ProbeShops = Config.Bind("Debug", "ProbeShops", false,
-            "Research: log the game's shopping goals and what citizens do inside businesses you own.");
         TestStock = Config.Bind("Debug", "TestStock", -1,
             "Testing: when a save loads, set every item at your businesses to this many in stock. -1 = off.");
         TestDeliveryHours = Config.Bind("Debug", "TestDeliveryHours", -1f,

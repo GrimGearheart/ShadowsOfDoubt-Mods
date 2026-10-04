@@ -47,3 +47,7 @@ Tip: if you're already crouched, the first press of Crouch stands you up before 
 ## Feedback
 
 Found a bug or have a suggestion? Please leave a comment on the Thunderstore page.
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

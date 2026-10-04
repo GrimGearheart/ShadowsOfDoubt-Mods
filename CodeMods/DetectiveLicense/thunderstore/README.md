@@ -53,3 +53,7 @@ After the first launch, edit `BepInEx/config/sodmods.detectivelicense.cfg` (or u
 ## Feedback
 
 Found a bug or have a suggestion? Please leave a comment on the Thunderstore page.
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

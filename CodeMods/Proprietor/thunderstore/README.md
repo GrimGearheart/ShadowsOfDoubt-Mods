@@ -76,3 +76,7 @@ After the first launch, edit `BepInEx/config/sodmods.proprietor.cfg` (or use r2m
 
 - Built for the main (IL2CPP) branch of the game. Requires **SOD.Common**.
 - Works alongside The Protectorate's other mods (Detective License, Sanitation Department, Margin City and the rest).
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

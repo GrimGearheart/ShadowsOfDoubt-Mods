@@ -35,6 +35,13 @@ internal static class LedgerApp
     // Which business a home cruncher is showing (by computer); none = the list of businesses.
     private static readonly Dictionary<IntPtr, int> viewing = new();
 
+    /// <summary>Forgets which business each home computer was showing (a different save has different computers).</summary>
+    internal static void Reset()
+    {
+        rows.Clear();
+        viewing.Clear();
+    }
+
     /// <summary>True when this computer is in one of the player's own apartments.</summary>
     private static bool AtHome(ComputerController cc)
     {

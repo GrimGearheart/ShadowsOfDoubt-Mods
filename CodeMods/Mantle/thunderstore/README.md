@@ -56,3 +56,7 @@ After the first launch, edit `BepInEx/config/sodmods.mantle.cfg` (or use r2modma
 ## Feedback
 
 Found something you should be able to climb but can't (or the other way round)? Turn on `Debug.LogMantles`, try it again, and include `BepInEx/LogOutput.log` in your comment on the Thunderstore page.
+
+---
+
+*Made with the help of AI (Claude, by Anthropic). Designed, play-tested and released by The Protectorate.*

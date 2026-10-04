@@ -64,6 +64,8 @@ internal static class Store
 
     public static void Clear()
     {
+        LedgerApp.Reset();
+        SupermarketPatch.Reset();
         Owned = new Dictionary<int, Business>();
         lastDay = -1;
     }
@@ -78,7 +80,6 @@ internal static class Store
                 Owned = JsonSerializer.Deserialize<List<Business>>(File.ReadAllText(path)).ToDictionary(b => b.CompanyId);
             Plugin.Logger.LogInfo($"Save loaded: {Owned.Count} business(es) owned");
             foreach (var b in Owned.Values) GiveKeys(FindCompany(b.CompanyId), false);
-            ShopProbe.DumpGoals();
             if (Plugin.TestStock.Value >= 0)
                 foreach (var b in Owned.Values)
                 {

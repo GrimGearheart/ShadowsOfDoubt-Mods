@@ -17,6 +17,8 @@ internal static class SupermarketPatch
     // One purchase per shopper per visit (they browse several shelves): humanID -> gameTime of their last purchase.
     private static readonly Dictionary<int, float> lastBought = new();
 
+    internal static void Reset() => lastBought.Clear();
+
     private static void Postfix(AIActionPreset action, Interactable what, NewNode where, Actor who)
     {
         if (action == null || who == null || who.isPlayer || action.name != "ShopForGroceries") return;

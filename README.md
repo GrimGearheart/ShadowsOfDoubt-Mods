@@ -31,6 +31,10 @@ dotnet build -c Release CodeMods/Prone
 
 A Release build copies the DLL into the game's `BepInEx/plugins` folder. `tools/package_thunderstore.py CodeMods/<Mod>` builds the Thunderstore zip from the mod's `thunderstore` folder.
 
+## How they're made
+
+The mods are made with the help of AI (Claude, by Anthropic). They're designed, play-tested and released by The Protectorate, and every release goes through the [release checklist](RELEASING.md).
+
 ## Feedback
 
 Found a bug or have an idea? Open an issue here or comment on the mod's Thunderstore page.
