@@ -155,27 +155,6 @@ internal static class Ledger
     }
 }
 
-/// <summary>Deliveries and daily wages, checked a couple of times a second.</summary>
-[HarmonyPatch(typeof(Player), nameof(Player.Update))]
-internal static class TickPatch
-{
-    private static float next;
-
-    private static void Postfix()
-    {
-        if (Time.unscaledTime < next) return;
-        next = Time.unscaledTime + 0.5f;
-        try
-        {
-            if (SessionData.Instance != null && SessionData.Instance.startedGame) Store.Tick();
-        }
-        catch (Exception e)
-        {
-            Plugin.Logger.LogError("Business tick failed: " + e.Message);
-        }
-    }
-}
-
 /// <summary>
 /// A business you own is never trespassing for you: not after hours, not in staff rooms, and not for loitering
 /// (the player's own check, Player.IsTrespassing, adds a loitering rule on top of the general one).
@@ -228,6 +207,145 @@ internal static class NoLoiteringPatch
         {
             var company = Player.Instance?.currentGameLocation?.thisAsAddress?.company;
             if (Store.Get(company) != null) __result = 1f;
+        }
+        catch { }
+    }
+}
+
+/// <summary>
+/// The game stops your watch's time-skip when the business you're standing in closes (to send customers home).
+/// In a business you own, the wait carries on to your alarm.
+/// </summary>
+[HarmonyPatch(typeof(Company), nameof(Company.SetOpen))]
+internal static class KeepWaitingAtClosingPatch
+{
+    private static void Prefix(Company __instance, bool openClosed, ref bool forceActual, out bool __state)
+    {
+        __state = false;
+        try
+        {
+            // The game only finishes closing while a member of staff is there; once they've all gone home it retries
+            // every minute and the place stays unlocked all night. For your businesses, with nobody left but you
+            // (customers still inside are trespassing by now), close it as the staff would have.
+            if (!openClosed && !forceActual && __instance.openForBusinessActual && __instance.currentStaff.Count == 0 &&
+                Store.Get(__instance) != null && __instance.address != null && OnlyOwnerLeft(__instance))
+            {
+                forceActual = true;
+                LightsOut(__instance);
+                Plugin.Logger.LogInfo($"{__instance.name}: closed up after hours (no staff left to lock up)");
+            }
+
+            var p = Player.Instance;
+            __state = !openClosed && p != null && p.spendingTimeMode && Store.Get(__instance) != null &&
+                      p.currentGameLocation != null && __instance.address != null &&
+                      p.currentGameLocation.Pointer == __instance.address.Pointer;
+        }
+        catch { }
+    }
+
+    private static void Postfix(Company __instance, bool openClosed, bool __state)
+    {
+        if (!openClosed && Plugin.LogEachSale.Value) LogOccupants(__instance);
+        if (!__state) return;
+        try
+        {
+            var p = Player.Instance;
+            if (!p.spendingTimeMode && SessionData.Instance.gameTime < p.alarm) p.SetSpendingTimeMode(true);
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError("Couldn't keep waiting at closing time: " + e.Message);
+        }
+    }
+
+    private static bool OnlyOwnerLeft(Company c)
+    {
+        foreach (var a in c.address.currentOccupants)
+            if (a != null && !a.isPlayer && !a.isTrespassing && !a.isAtWork) return false;
+        return true;
+    }
+
+    /// <summary>
+    /// What the last member of staff would have done on the way out: lights off, entrance doors shut and locked.
+    /// (You have the keys, and the light switches still work, if you're staying.)
+    /// </summary>
+    private static void LightsOut(Company c)
+    {
+        try
+        {
+            foreach (var room in c.address.rooms)
+                if (room != null && room.mainLightStatus) room.SetMainLights(false, "Under New Management: closing up");
+            foreach (var entrance in c.address.entrances)
+            {
+                var door = entrance?.door;
+                if (door == null) continue;
+                door.SetOpen(0f, null);
+                door.SetLocked(true, null, false);
+                if (Plugin.LogEachSale.Value) Plugin.Logger.LogInfo($"{c.name}: entrance door to '{entrance.GetOtherGameLocation(c.address)?.name}' " +
+                                      $"locked={door.isLocked}, closed={door.isClosed}, lock type={door.preset?.lockType}");
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError("Couldn't close up: " + e.Message);
+        }
+    }
+
+    private static float nextOccupantLog;
+
+    /// <summary>Debug: who's still inside a business of yours as it closes, and how the game classes them (hourly at most).</summary>
+    private static void LogOccupants(Company c)
+    {
+        try
+        {
+            if (Store.Get(c) == null || c.address == null) return;
+            if (SessionData.Instance.gameTime < nextOccupantLog) return;
+            nextOccupantLog = SessionData.Instance.gameTime + 1f;
+            var lines = new System.Collections.Generic.List<string>();
+            foreach (var a in c.address.currentOccupants)
+            {
+                if (a == null) continue;
+                var h = a.TryCast<Human>();
+                var who = a.isPlayer ? "YOU" : h != null ? h.GetCitizenName() : a.name;
+                var staff = h?.job?.employer != null && h.job.employer.companyID == c.companyID;
+                lines.Add($"{who}{(staff ? " (staff)" : "")} atWork={a.isAtWork} trespassing={a.isTrespassing} room='{a.currentRoom?.name}'");
+            }
+            Plugin.Logger.LogInfo($"[Closing] {c.name} closing at {SessionData.Instance.decimalClock:0.00}: open={c.openForBusinessActual}, staff in={c.currentStaff.Count}, inside: " +
+                                  (lines.Count == 0 ? "nobody" : string.Join("; ", lines)));
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError("Closing log failed: " + e.Message);
+        }
+    }
+}
+
+/// <summary>
+/// Staff only lock up after closing once everyone left inside is either at work or trespassing. You're never
+/// trespassing in a business you own, so to them you were a customer who never leaves: they'd wait for you, the doors
+/// stayed unlocked and the business never properly closed. Inside a business you own you count as at work (the player
+/// has no job, so the game itself never sets this for you).
+/// </summary>
+[HarmonyPatch(typeof(Player), nameof(Player.Update))]
+internal static class OwnerAtWorkPatch
+{
+    private static bool set;
+
+    private static void Postfix(Player __instance)
+    {
+        try
+        {
+            var mine = Store.Get(__instance.currentGameLocation?.thisAsAddress?.company) != null;
+            if (mine && !__instance.isAtWork)
+            {
+                __instance.isAtWork = true;
+                set = true;
+            }
+            else if (!mine && set)
+            {
+                __instance.isAtWork = false;
+                set = false;
+            }
         }
         catch { }
     }

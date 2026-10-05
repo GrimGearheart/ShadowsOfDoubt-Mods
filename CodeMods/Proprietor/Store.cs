@@ -49,6 +49,8 @@ public class Business
     public Dictionary<string, int> Stock { get; set; } = new();
     public List<Order> Orders { get; set; } = new();
     public List<Transfer> Transfers { get; set; } = new();
+    /// <summary>The manager has a raise to handle restocking.</summary>
+    public bool ManagerRestocks { get; set; }
     /// <summary>Rooms whose ceiling you've painted (their ceiling glow follows the Multiply colour).</summary>
     public List<int> PaintedCeilings { get; set; } = new();
     public List<Sale> Sales { get; set; } = new();
@@ -58,9 +60,8 @@ public class Business
 internal static class Store
 {
     private const string FileName = "proprietor.json";
-    private const int MaxSales = 150;
+    private const int MaxSales = 400;
     public static Dictionary<int, Business> Owned = new();
-    private static int lastDay = -1;
 
     public static Business Get(Company c) => c != null && Owned.TryGetValue(c.companyID, out var b) ? b : null;
 
@@ -69,7 +70,6 @@ internal static class Store
         LedgerApp.Reset();
         SupermarketPatch.Reset();
         Owned = new Dictionary<int, Business>();
-        lastDay = -1;
     }
 
     public static void Load(SaveGameArgs args)
@@ -81,7 +81,13 @@ internal static class Store
             if (File.Exists(path))
                 Owned = JsonSerializer.Deserialize<List<Business>>(File.ReadAllText(path)).ToDictionary(b => b.CompanyId);
             Plugin.Logger.LogInfo($"Save loaded: {Owned.Count} business(es) owned");
-            foreach (var b in Owned.Values) GiveKeys(FindCompany(b.CompanyId), false);
+            foreach (var b in Owned.Values)
+            {
+                var c = FindCompany(b.CompanyId);
+                GiveKeys(c, false);
+                if (c != null)
+                    Plugin.Logger.LogInfo($"{b.Name}: {Regulars(c):0} weighted regulars, about {ItemDemand(c):0.#} of each item a day, orders of {OrderSize(c)}");
+            }
             if (Plugin.TestStock.Value >= 0)
                 foreach (var b in Owned.Values)
                 {
@@ -187,7 +193,8 @@ internal static class Store
         {
             CompanyId = c.companyID, Name = c.name, PricePaid = price, BoughtAt = SessionData.Instance.gameTime
         };
-        foreach (var item in Menu(c)) b.Stock[item.Key.name] = Plugin.StartingStock.Value;
+        var start = OrderSize(c) * 2;
+        foreach (var item in Menu(c)) b.Stock[item.Key.name] = start;
         Owned[c.companyID] = b;
         GiveKeys(c, true);
         return b;
@@ -246,11 +253,16 @@ internal static class Store
 
     // ---- Ordering ----
 
-    public static bool PlaceOrder(Business b, string item, int price, out string message)
+    public static bool PlaceOrder(Business b, string item, int price, out string message, bool tillOnly = false)
     {
-        var qty = Plugin.OrderSize.Value;
+        var qty = OrderSize(FindCompany(b.CompanyId));
         var cost = UnitCost(price) * qty;
-        var fromTill = Math.Min(b.Till, cost);
+        var fromTill = Math.Min(Math.Max(0, b.Till), cost);
+        if (tillOnly && fromTill < cost)
+        {
+            message = $"The till can't cover the order (¢{cost})";
+            return false;
+        }
         var fromWallet = cost - fromTill;
         if (fromWallet > GameplayController.Instance.money)
         {
@@ -289,9 +301,10 @@ internal static class Store
         return $"Courier booked: {Currency}{net} arrives tomorrow morning" + (fee > 0 ? $" ({Currency}{fee} fee)" : "");
     }
 
-    // ---- Time passing: deliveries, transfers and wages ----
+    // ---- Time passing: deliveries, transfers and wages (driven by SOD.Common's game-clock events) ----
 
-    public static void Tick()
+    /// <summary>Every in-game minute: deliveries and courier money that are due arrive.</summary>
+    public static void CheckArrivals()
     {
         if (Owned.Count == 0 || SessionData.Instance == null) return;
         var now = SessionData.Instance.gameTime;
@@ -317,21 +330,17 @@ internal static class Store
             Plugin.Message($"{b.Name}: delivery arrived ({what})");
             Plugin.Logger.LogInfo($"{b.Name}: delivery arrived ({what})");
         }
-
-        var day = DayNumber();
-        if (lastDay < 0) { lastDay = day; return; }
-        if (day == lastDay) return;
-        for (var d = lastDay; d < day; d++) PayWages();
-        lastDay = day;
     }
 
-    private static void PayWages()
+    /// <summary>At each in-game midnight: staff are paid.</summary>
+    public static void PayWages()
     {
         foreach (var b in Owned.Values)
         {
             var company = FindCompany(b.CompanyId);
-            var staff = company?.companyRoster?.Count ?? 0;
-            var wages = staff * Plugin.WagePerStaff.Value;
+            var staff = StaffCount(company);
+            var raise = b.ManagerRestocks ? Plugin.ManagerRaise.Value : 0;
+            var wages = staff * Plugin.WagePerStaff.Value + raise;
             // The till pays first, then the owner's wallet; only what neither can cover is left as a debt on the till.
             var fromTill = Math.Min(Math.Max(0, b.Till), wages);
             var fromWallet = Math.Min(wages - fromTill, Math.Max(0, GameplayController.Instance.money));
@@ -340,7 +349,7 @@ internal static class Store
             if (fromWallet > 0) GameplayController.Instance.AddMoney(-fromWallet, false, "proprietor_wages");
             var detail = fromWallet > 0 ? $" (¢{fromWallet} from your wallet)" : "";
             if (unpaid > 0) detail += $", ¢{unpaid} owed from the till";
-            Plugin.Message($"{b.Name}: paid ¢{wages} in wages{detail}. Till: ¢{b.Till}", unpaid == 0);
+            Plugin.Message($"{b.Name}: paid ¢{wages} in wages{(raise > 0 ? $" (incl. the manager's ¢{raise} raise)" : "")}{detail}. Till: ¢{b.Till}", unpaid == 0);
             Plugin.Logger.LogInfo($"{b.Name}: wages ¢{wages} for {staff} staff: till ¢{fromTill}, wallet ¢{fromWallet}, unpaid ¢{unpaid}; till now ¢{b.Till}");
         }
     }
@@ -350,10 +359,51 @@ internal static class Store
     /// </summary>
     public static float TodayMidnight() => SessionData.Instance.gameTime - SessionData.Instance.decimalClock;
 
-    public static int DayNumber() => Mathf.RoundToInt(TodayMidnight() / 24f);
 
     /// <summary>Whole days from today until the given gameTime (0 = today).</summary>
     public static int DaysUntil(float time) => Mathf.FloorToInt((time - TodayMidnight()) / 24f);
+
+    // ---- How much stock a business needs ----
+
+    /// <summary>Expected sales of one menu item per day, from the business's regular customers.</summary>
+    public static float ItemDemand(Company c)
+    {
+        if (c == null) return 1f;
+        var items = Math.Max(1, Menu(c).Count);
+        return Math.Max(1f, Regulars(c) * Plugin.DemandPerRegular.Value / items);
+    }
+
+    /// <summary>One order: a few days of an item's expected sales, rounded to 5 (busy places order more).</summary>
+    public static int OrderSize(Company c)
+    {
+        var raw = ItemDemand(c) * Plugin.DaysOfStock.Value;
+        var rounded = Mathf.RoundToInt(raw / 5f) * 5;
+        return Mathf.Clamp(rounded, Plugin.MinOrder.Value, Plugin.MaxOrder.Value);
+    }
+
+    /// <summary>
+    /// What a manager on a raise keeps of an item (in stock plus on order): a few days of what it actually sold over
+    /// the last three days, or one order if it has barely sold.
+    /// </summary>
+    public static int RestockTarget(Business b, Company c, string item)
+    {
+        var now = SessionData.Instance.gameTime;
+        var sold = b.Sales.Where(s => now - s.Time <= 72f).Sum(s => s.Items.Count(i => i.Item == item));
+        var owned = Math.Max(1f, Math.Min(3f, (now - b.BoughtAt) / 24f));
+        var perDay = sold / owned;
+        var target = Mathf.CeilToInt(perDay * Plugin.DaysOfStock.Value);
+        return Mathf.Clamp(target, OrderSize(c), Plugin.MaxStock.Value);
+    }
+
+    /// <summary>Jobs actually filled (vacant positions aren't paid).</summary>
+    public static int StaffCount(Company c)
+    {
+        var n = 0;
+        if (c?.companyRoster == null) return 0;
+        foreach (var job in c.companyRoster)
+            if (job?.employee != null) n++;
+        return n;
+    }
 
     public static Company FindCompany(int id)
     {

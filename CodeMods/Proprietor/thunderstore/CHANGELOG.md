@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0
+
+- **Give the manager a raise to handle restocking.** Offer it in conversation (in person, or by phone through staff on shift). The raise is paid with the wages, and every morning at 7 the manager orders whatever is running low, paid from the till.
+- **Morning stock report.** Each morning you're told about any business that's out of stock or running low, and what the manager ordered.
+- **Stock scales with the business.** Order sizes and starting stock follow how many regulars a place has, so busy places order more. A manager on a raise restocks by what each item actually sold over the last few days. Deliveries now take 1 to 3 days.
+- **Put money into the till.** A new ledger row lets you move cash from your wallet into a business, to cover wages and restocking through a slow patch.
+- **Open or closed at a glance.** The ledger shows whether a business is open right now and how many staff are in.
+- **Staying in your own business after hours works properly.** Your staff now lock up and go home at closing time even when you're inside (before, they waited for you to leave, so the place never properly closed and the next day started late). If the staff have already gone, the business is closed up for them: lights off, doors locked. Waiting with your watch is no longer cut short at closing time.
+- **Fixes:** vacant jobs are no longer paid wages; wages and deliveries now run on the game clock (via SOD.Common); the Business Ledger no longer disturbs other mods' cruncher apps (such as Stock Market).
+
 ## 1.1.0
 
 - **Decorate your businesses.** The Edit Decor button now works inside businesses you own: repaint walls, floors and ceilings, and buy and place your own furniture. The business's own fittings (counters, registers, tables, menu boards...) stay where they are, but litter, junk and cardboard boxes can be cleared out.

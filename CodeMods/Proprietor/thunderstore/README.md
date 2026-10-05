@@ -22,9 +22,13 @@ The **owner stays on as your manager**, and the staff keep their jobs. Nothing a
 
 Every sale is real. When a citizen orders a burger at your diner, the money goes into **the till** and a burger comes out of **your stock**.
 
-- **Stock.** You start with 20 of each menu item. When something runs out, customers can't order it, and when nothing they want is left, they walk out. Those are counted as *turned away*.
-- **Orders.** Restock on the cruncher, 10 at a time. You pay up front (30% of the menu price, from the till first, then your wallet), and the delivery arrives in 2 to 6 days.
-- **Wages.** At midnight your staff are paid out of the till. If the till is short, the rest comes from your wallet.
+- **Stock.** A new business comes with a couple of orders' worth of each menu item. When something runs out, customers can't order it, and when nothing they want is left, they walk out. Those are counted as *turned away*.
+- **Orders.** Restock on the cruncher. Order sizes follow how busy the place is (a few days of that item's expected sales). You pay up front (30% of the menu price, from the till first, then your wallet), and the delivery arrives in 1 to 3 days. Press ORDER again for more.
+- **Wages.** At midnight the staff are paid out of the till (vacant positions cost nothing). If the till is short, the rest comes from your wallet.
+- **A manager who restocks.** Tell the manager (or have staff on shift call them) *"I'll give you a raise if you handle the restocking."* The raise is paid with the wages, and every morning at 7 the manager tops up anything running low, by what it actually sold lately, paid from the till only. Changed your mind? Tell them they can go back to their old pay.
+- **Morning report.** Every morning you're told about any business that's out of stock or running low, and what its manager ordered.
+- **Opening hours.** Businesses keep their own hours; a late-night bar or eatery may not open until midday. The ledger tells you whether a place is open and who's in.
+- **After hours.** You can stay inside your own business at closing time: the staff lock up and go home around you (and if they've already left, the place is closed up for them). Waiting with your watch isn't interrupted.
 - **Selling.** Changed your mind? Tell the manager, or staff on shift, that you want to sell. You get back 60% of what you paid, plus whatever's in the till.
 
 ## Making it yours
@@ -41,12 +45,13 @@ Shared spaces next door, like a building's public bathrooms, aren't part of your
 A new program on the cruncher, in two places:
 
 **At your business:** log in on the office cruncher (your login fills itself in) and open **Business Ledger**.
-- **The till:** takings, customers in the last 24 hours, customers turned away, and the wage bill. **COLLECT** puts the whole till in your wallet.
-- **Every menu item:** stock, price, what it costs you, and orders on the way. **ORDER 10** restocks it.
+- **The till:** whether the place is open and how many staff are in, the last 24 hours' sales, customers turned away, and the wage bill. **COLLECT** puts the whole till in your wallet.
+- **Put money in:** **DEPOSIT** moves cash from your wallet into the till, ¢100 a press, to carry a business through a slow patch.
+- **Every menu item:** stock, price, what it costs you, and orders on the way. **ORDER** restocks it.
 - **Recent sales:** every customer by name, with what they bought and when.
 
 **At home:** put a cruncher in your apartment (Apartment Decor › Furnishings) and the ledger opens on **My Businesses**, a list of everything you own with tills, sales, low-stock warnings and orders due.
-- **OPEN** a business to manage it remotely: check stock, place orders, read the sales.
+- **OPEN** a business to manage it remotely: check stock, place orders, put money in, read the sales.
 - **TRANSFER** sends the till home by courier. It arrives at 8 the next morning, less a 10% fee. Collecting in person gets you the full amount, so a visit still pays.
 
 ## What's next
@@ -54,7 +59,8 @@ A new program on the cruncher, in two places:
 Planned for future versions:
 - **Shops.** Pawn shops, hardware stores and other retail. The game has no errand that sends citizens shopping there, so they need new shoppers first.
 - **Supermarkets.** Grocery runs are rare in the game, so they need a different kind of deal to be worth owning.
-- **Deliveries you can see** arriving at the door.
+- **Deliveries you can see:** crates turning up in the stockroom or back room.
+- **Regulars that come and go.** Run out of stock and they drift to a rival; run a good place and you win them over.
 - **A full till as a target.** Leave too much cash in the register and someone may come for it.
 
 ## Bugs and feedback
@@ -70,11 +76,14 @@ After the first launch, edit `BepInEx/config/sodmods.proprietor.cfg` (or use r2m
 | `Buying.BasePrice` | 1500 | Price of a business before its customers are counted |
 | `Buying.PricePerRegular` | 12 | Added for each regular customer |
 | `Buying.SellBackShare` | 0.6 | Share of the price you get back when selling |
-| `Stock.StartingStock` | 20 | Stock of each item when you buy a business |
-| `Stock.OrderSize` | 10 | Items per order |
+| `Stock.DemandPerRegular` | 0.25 | Expected daily sales per regular customer; order sizes scale with it |
+| `Stock.DaysOfStock` | 3 | Days of sales one order (or a manager's restock) covers |
+| `Stock.MinOrder` / `MaxOrder` | 10 / 100 | Smallest and largest order |
 | `Stock.WholesaleShare` | 0.3 | What stock costs you, as a share of the menu price |
-| `Stock.MinDeliveryDays` / `MaxDeliveryDays` | 2 / 6 | How long orders take |
+| `Stock.MinDeliveryDays` / `MaxDeliveryDays` | 1 / 3 | How long orders take |
 | `Running.WagePerStaff` | 8 | Daily wage per member of staff |
+| `Running.ManagerRaise` | 50 | Daily raise for a manager who handles restocking |
+| `Running.DepositStep` | 100 | How much each DEPOSIT press puts in the till |
 | `Remote.TransferFee` | 0.1 | The courier's cut when you transfer from home (0 = free) |
 
 ## Safe to remove?
@@ -84,6 +93,7 @@ After the first launch, edit `BepInEx/config/sodmods.proprietor.cfg` (or use r2m
 ## Compatibility
 
 - Built for the main (IL2CPP) branch of the game. Requires **SOD.Common**.
+- Designed to sit alongside other cruncher-app mods such as Stock Market, and to follow Life and Living's economy changes (checked against their code, not yet played together).
 - Works alongside The Protectorate's other mods (Detective License, Sanitation Department, Margin City and the rest).
 
 ---

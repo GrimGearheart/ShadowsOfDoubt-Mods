@@ -22,7 +22,7 @@ internal static class LedgerApp
     private const string Currency = "¢";
     private static CruncherAppPreset preset;
 
-    private enum RowKind { Till, Item, Business, Back }
+    private enum RowKind { Till, Deposit, Item, Business, Back }
     private sealed class Row
     {
         public RowKind Kind;
@@ -67,13 +67,14 @@ internal static class LedgerApp
 
     // ---- Installing the program ----
 
-    // Each computer type's original app list, before we changed it (the list is shared by every computer of that type).
-    private static readonly Dictionary<IntPtr, List<CruncherAppPreset>> originals = new();
+    // Wizcards taken off a computer type's app list to make room for the ledger, so it can be put back.
+    private static readonly Dictionary<IntPtr, CruncherAppPreset> wizcardsRemoved = new();
 
     /// <summary>
-    /// Sets the computer type's app list right before a desktop draws. In a business you own, the Wizcards game
-    /// makes way for the Business Ledger (the desktop only fits eight icons); at home the ledger is added;
-    /// everywhere else the game's own list is restored.
+    /// Adjusts the computer type's app list right before a desktop draws (the list is shared by every computer of that
+    /// type). In a business you own, the ledger takes the Wizcards game's place (the desktop only fits eight icons); at
+    /// home the ledger is added; everywhere else both are as the game had them. Only these two entries are ever
+    /// touched, so apps other mods add (like Stock Market) are left alone.
     /// </summary>
     [HarmonyPatch(typeof(DesktopApp), nameof(DesktopApp.UpdateIcons))]
     [HarmonyPrefix]
@@ -86,35 +87,45 @@ internal static class LedgerApp
             if (preset == null) Create();
             if (preset == null) return;
 
-            if (!originals.TryGetValue(apps.Pointer, out var original))
-            {
-                original = new List<CruncherAppPreset>();
-                foreach (var app in apps)
-                    if (app != null && app.Pointer != preset.Pointer) original.Add(app);
-                originals[apps.Pointer] = original;
-            }
-
             var cc = __instance.controller;
             var business = Store.Get(CompanyAt(cc)) != null;
             var home = !business && Store.Owned.Count > 0 && AtHome(cc);
-            apps.Clear();
-            var placed = false;
-            foreach (var app in original)
+            var ledger = IndexOf(apps, a => a.Pointer == preset.Pointer);
+
+            if (business)
             {
-                if (business && !placed && IsWizcards(app))
+                if (ledger >= 0) return;
+                var wiz = IndexOf(apps, IsWizcards);
+                if (wiz >= 0)
                 {
-                    apps.Add(preset);
-                    placed = true;
-                    continue;
+                    wizcardsRemoved[apps.Pointer] = apps[wiz];
+                    apps[wiz] = preset;
                 }
-                apps.Add(app);
+                else apps.Add(preset);
+                return;
             }
-            if ((business || home) && !placed) apps.Add(preset);
+
+            // Not a business of yours: put Wizcards back where the ledger was, if it was swapped out here.
+            if (ledger >= 0 && wizcardsRemoved.TryGetValue(apps.Pointer, out var wizcards))
+            {
+                apps[ledger] = wizcards;
+                wizcardsRemoved.Remove(apps.Pointer);
+                ledger = -1;
+            }
+            if (home && ledger < 0) apps.Add(preset);
+            else if (!home && ledger >= 0) apps.RemoveAt(ledger);
         }
         catch (Exception e)
         {
             Plugin.Logger.LogError("Couldn't set up the Business Ledger: " + e);
         }
+    }
+
+    private static int IndexOf(Il2CppSystem.Collections.Generic.List<CruncherAppPreset> apps, Func<CruncherAppPreset, bool> match)
+    {
+        for (var i = 0; i < apps.Count; i++)
+            if (apps[i] != null && match(apps[i])) return i;
+        return -1;
     }
 
     private static bool IsWizcards(CruncherAppPreset app)
@@ -209,13 +220,17 @@ internal static class LedgerApp
 
         var now = SessionData.Instance.gameTime;
         var today = b.Sales.Where(s => now - s.Time <= 24f).ToList();
-        var staff = company.companyRoster?.Count ?? 0;
+        var staff = Store.StaffCount(company);
         var sending = b.Transfers.Sum(t => t.Amount);
         options.Add(Option(
             $"TILL: {Currency}{b.Till}" + (sending > 0 ? $"\n{Currency}{sending} on its way to you" : "") +
-            $"\n24 hours: {today.Count} customers, {Currency}{today.Sum(s => s.Total)}\n" +
-            $"Turned away: {b.TurnedAway}\nWages: {Currency}{staff * Plugin.WagePerStaff.Value}/day",
+            $"\n{OpenState(company)}" +
+            $"\n24h: {today.Count} sales, {Currency}{today.Sum(s => s.Total)}, {b.TurnedAway} turned away" +
+            $"\n{(b.ManagerRestocks ? "Wages+raise" : "Wages")}: {Currency}{staff * Plugin.WagePerStaff.Value + (b.ManagerRestocks ? Plugin.ManagerRaise.Value : 0)}/day",
             new Row { Kind = RowKind.Till, CompanyId = b.CompanyId }));
+
+        options.Add(Option($"PUT MONEY IN\nFrom your wallet, {Currency}{Plugin.DepositStep.Value} at a time\nPays wages and the manager's restocking",
+            new Row { Kind = RowKind.Deposit, CompanyId = b.CompanyId }));
 
         foreach (var kv in Store.Menu(company))
         {
@@ -241,6 +256,43 @@ internal static class LedgerApp
         }
         app.list.UpdateElements(options);
         app.UpdateSelected();
+    }
+
+    /// <summary>
+    /// Open or closed right now, and how many staff are in. A business only opens when it's within its hours and at
+    /// least one member of staff has turned up; until then, arriving customers turn around at the door.
+    /// </summary>
+    private static string OpenState(Company c)
+    {
+        var inNow = c.currentStaff?.Count ?? 0;
+        var total = Store.StaffCount(c);
+        // The game only flips a business to closed when staff are there to close up, so after everyone has gone home it
+        // can still read as open; the schedule (openForBusinessDesired) is the reliable part.
+        var state = !c.openForBusinessDesired ? "Closed (hours)" : c.openForBusinessActual ? "Open" : "Closed (no staff in)";
+        if (inNow == 0 && Plugin.LogEachSale.Value) LogStaff(c);
+        return $"{state}, {inNow}/{total} staff in";
+    }
+
+    /// <summary>Where everyone is, when a business that should be open has nobody in (to find out why).</summary>
+    private static void LogStaff(Company c)
+    {
+        try
+        {
+            Plugin.Logger.LogInfo($"[Staff] {c.name} at {SessionData.Instance.decimalClock:0.00} ({SessionData.Instance.day}): open={c.openForBusinessActual}, wanted open={c.openForBusinessDesired}");
+            foreach (var job in c.companyRoster)
+            {
+                var h = job?.employee;
+                if (h == null) { Plugin.Logger.LogInfo($"[Staff]   {job?.preset?.name}: vacant"); continue; }
+                var days = new List<string>();
+                foreach (var d in job.workDaysList) days.Add(d.ToString().Substring(0, 3));
+                Plugin.Logger.LogInfo($"[Staff]   {h.GetCitizenName()} ({job.preset?.name}) shift {job.startTimeDecimalHour:0.#}-{job.endTimeDecialHour:0.#} {string.Join("/", days)}: " +
+                                      $"atWork={h.isAtWork} dead={h.isDead} asleep={h.isAsleep} at '{h.currentGameLocation?.name}' goal '{h.ai?.currentGoal?.preset?.name}'");
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError("Staff log failed: " + e.Message);
+        }
     }
 
     /// <summary>One business in the home list.</summary>
@@ -294,9 +346,10 @@ internal static class LedgerApp
             {
                 RowKind.Back => "BACK",
                 RowKind.Business => "OPEN",
+                RowKind.Deposit when b != null => $"DEPOSIT {Currency}{Plugin.DepositStep.Value}",
                 RowKind.Till when b != null && remote => $"TRANSFER {Currency}{Store.TransferNet(b.Till)}",
                 RowKind.Till when b != null => $"COLLECT {Currency}{Math.Max(0, b.Till)}",
-                RowKind.Item when b != null => $"ORDER {Plugin.OrderSize.Value} - {Currency}{Store.UnitCost(row.Price) * Plugin.OrderSize.Value}",
+                RowKind.Item when b != null => $"ORDER {Store.OrderSize(Store.FindCompany(row.CompanyId))} - {Currency}{Store.UnitCost(row.Price) * Store.OrderSize(Store.FindCompany(row.CompanyId))}",
                 _ => null
             };
             __instance.printButton.gameObject.SetActive(label != null);
@@ -387,7 +440,21 @@ internal static class LedgerApp
             var b = Store.Get(Store.FindCompany(row.CompanyId));
             if (b == null) return false;
             var remote = Store.Get(CompanyAt(cc)) == null;
-            if (row.Kind == RowKind.Till)
+            if (row.Kind == RowKind.Deposit)
+            {
+                var amount = Plugin.DepositStep.Value;
+                if (GameplayController.Instance.money < amount)
+                {
+                    Plugin.Message($"You don't have {Currency}{amount} on you.", false);
+                    Sound(cc, AudioControls.Instance.computerInvalidPasscode);
+                    return false;
+                }
+                GameplayController.Instance.AddMoney(-amount, true, "proprietor_deposit");
+                b.Till += amount;
+                Plugin.Logger.LogInfo($"{b.Name}: deposited ¢{amount}, till now ¢{b.Till}");
+                Sound(cc, AudioControls.Instance.computerPrint);
+            }
+            else if (row.Kind == RowKind.Till)
             {
                 if (b.Till <= 0)
                 {
