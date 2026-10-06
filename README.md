@@ -8,6 +8,7 @@ Source code for The Protectorate's [Shadows of Doubt](https://store.steampowered
 | [Detective Squint](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/DetectiveSquint/) | Hold a key to zoom in | [CodeMods/DetectiveSquint](CodeMods/DetectiveSquint) |
 | [Mantle](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/Mantle/) | Climb up ledges and vault over fences | [CodeMods/Mantle](CodeMods/Mantle) |
 | [Prone](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/Prone/) | Lie down and crawl, to look under furniture | [CodeMods/Prone](CodeMods/Prone) |
+| [Sit Anywhere](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/SitAnywhere/) | Sit on crates, benches, low walls and rooftop ledges, and pass time there | [CodeMods/SitAnywhere](CodeMods/SitAnywhere) |
 | [Detective License](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/DetectiveLicense/) | Crime scene permits and a private investigator's license from City Hall | [CodeMods/DetectiveLicense](CodeMods/DetectiveLicense) |
 | [Sanitation Department](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/SanitationDepartment/) | Get paid to clean the streets and crime scenes | [CodeMods/SanitationDepartment](CodeMods/SanitationDepartment) |
 | [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/) | A hand-planned city, and the City Planner that built it | [CodeMods/CityPlanner](CodeMods/CityPlanner) |

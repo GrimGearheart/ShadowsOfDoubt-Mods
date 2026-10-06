@@ -106,6 +106,32 @@ def prone():
     return img
 
 
+def sit():
+    img, d = base("SIT ANYWHERE")
+    # Rooftop ledge on the left, the drop and the city below on the right
+    top = 600
+    d.rectangle([90, top, 520, top + 40], fill=RING)            # ledge top
+    d.rectangle([90, top + 40, 470, S - 90], fill=RING)         # building wall
+    for i, (x, h) in enumerate([(620, 170), (720, 250), (830, 130)]):
+        d.rectangle([x, S - 90 - h, x + 80, S - 90], fill=DIM)
+        for wy in range(S - 90 - h + 30, S - 110, 50):
+            d.rectangle([x + 22, wy, x + 36, wy + 18], fill=ACCENT if (wy + i) % 3 else BG)
+    # Moon
+    d.ellipse([760, 250, 880, 370], fill=ACCENT)
+    d.ellipse([730, 235, 850, 355], fill=BG)
+    # Figure sitting on the edge, legs over the drop, looking out
+    hx, hy = 455, top - 230
+    d.ellipse([hx - 50, hy - 50, hx + 50, hy + 50], fill=TEXT)
+    d.rounded_rectangle([hx - 95, hy - 42, hx + 95, hy - 24], radius=9, fill=TEXT)   # fedora brim
+    d.rounded_rectangle([hx - 52, hy - 105, hx + 52, hy - 30], radius=22, fill=TEXT)  # crown
+    d.rectangle([hx - 52, hy - 52, hx + 52, hy - 40], fill=ACCENT)                   # hat band
+    d.line([hx - 10, hy + 50, hx - 40, top - 10], fill=TEXT, width=56)         # body
+    d.line([hx - 40, top - 15, 545, top - 15], fill=TEXT, width=40)            # thigh along the ledge
+    d.line([545, top - 15, 575, top + 150], fill=TEXT, width=36)               # shin over the drop
+    d.line([hx - 5, hy + 90, 520, top - 60], fill=TEXT, width=26)              # arm resting on knee
+    return img
+
+
 def sanitation():
     img, d = base("SANITATION")
     floor = 820
@@ -196,6 +222,6 @@ def management():
 if __name__ == "__main__":
     kind, out = sys.argv[1], sys.argv[2]
     img = {"squint": squint, "license": license_, "mantle": mantle, "prone": prone, "sanitation": sanitation, "city": city,
-           "management": management}[kind]()
+           "management": management, "sit": sit}[kind]()
     img.resize((256, 256), Image.LANCZOS).save(out)
     print("wrote", out)
