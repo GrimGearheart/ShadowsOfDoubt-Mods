@@ -60,6 +60,7 @@ internal static class PurchasePatch
             if (business != null && sale == null && anyHidden)
             {
                 business.TurnedAway++;
+                Loyalty.TurnedAway(business, company, buyer);
                 Plugin.Logger.LogInfo($"{business.Name}: {buyer?.GetCitizenName()} left, nothing they wanted was in stock");
             }
         }
@@ -121,6 +122,7 @@ internal static class PurchasePatch
             {
                 sale = new Sale { Time = SessionData.Instance.gameTime, Customer = buyer.GetCitizenName() };
                 Store.RecordSale(business, sale);
+                Loyalty.Served(business, company, buyer);
             }
             sale.Items.Add(new SaleItem { Item = __result.name, Price = price });
             business.Till += price;

@@ -14,6 +14,8 @@ public class Sale
     public float Time { get; set; }
     public string Customer { get; set; }
     public List<SaleItem> Items { get; set; } = new();
+    /// <summary>Made up for customers the game didn't simulate while you were away (see Trade).</summary>
+    public bool Offscreen { get; set; }
     public int Total => Items.Sum(i => i.Price);
 }
 
@@ -54,6 +56,19 @@ public class Business
     /// <summary>Rooms whose ceiling you've painted (their ceiling glow follows the Multiply colour).</summary>
     public List<int> PaintedCeilings { get; set; } = new();
     public List<Sale> Sales { get; set; } = new();
+    /// <summary>When a customer last walked out with nothing (new regulars only come after a day without that).</summary>
+    public float LastTurnedAway { get; set; } = -1000f;
+    /// <summary>Regulars turned away today, as "citizen:errand" → times; settled at midnight.</summary>
+    public Dictionary<string, int> Strikes { get; set; } = new();
+    /// <summary>For the morning report.</summary>
+    public int RegularsGained { get; set; }
+    public List<string> RegularsLost { get; set; } = new();
+    /// <summary>What the manager will mention in the next morning's report.</summary>
+    public List<string> Notes { get; set; } = new();
+    public Dictionary<string, int> Delivered { get; set; } = new();
+    public bool BadNews { get; set; }
+    /// <summary>The last week of the manager's reports (vmails).</summary>
+    public List<Report> Reports { get; set; } = new();
 }
 
 /// <summary>Owned businesses, saved next to each save game.</summary>
@@ -86,7 +101,7 @@ internal static class Store
                 var c = FindCompany(b.CompanyId);
                 GiveKeys(c, false);
                 if (c != null)
-                    Plugin.Logger.LogInfo($"{b.Name}: {Regulars(c):0} weighted regulars, about {ItemDemand(c):0.#} of each item a day, orders of {OrderSize(c)}");
+                    Plugin.Logger.LogInfo($"{b.Name}: {Regulars(c):0} weighted regulars, about {ItemDemand(c):0.#} of each item a day, orders of {OrderSize(c)}; open {c.retailOpenHours.x:0.#}-{c.retailOpenHours.y:0.#}, manager restocks at {Restock.RestockHour(c)}:00");
             }
             if (Plugin.TestStock.Value >= 0)
                 foreach (var b in Owned.Values)
@@ -193,7 +208,7 @@ internal static class Store
         {
             CompanyId = c.companyID, Name = c.name, PricePaid = price, BoughtAt = SessionData.Instance.gameTime
         };
-        var start = OrderSize(c) * 2;
+        var start = Plugin.TestStartingStock.Value >= 0 ? Plugin.TestStartingStock.Value : OrderSize(c) * 2;
         foreach (var item in Menu(c)) b.Stock[item.Key.name] = start;
         Owned[c.companyID] = b;
         GiveKeys(c, true);
@@ -241,6 +256,29 @@ internal static class Store
 
     public static string ItemName(string preset) => Strings.Get("evidence.names", preset);
 
+    /// <summary>
+    /// Foods counted one at a time, which read naturally in the plural ("out of Donuts"). Everything else, drinks and
+    /// brand names especially, stays as it is ("out of Kola", "out of Ruby Choice").
+    /// </summary>
+    private static readonly HashSet<string> Countable = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "burger", "hamburger", "cheeseburger", "donut", "doughnut", "dog", "hotdog", "sandwich", "pie", "muffin",
+        "bagel", "croissant", "cookie", "pretzel", "taco", "burrito", "wrap", "roll", "bun", "cake", "cupcake",
+        "waffle", "pancake", "sausage", "skewer", "dumpling", "pastry", "bar", "apple", "banana", "egg", "nugget"
+    };
+
+    /// <summary>"Donuts", "Hot Dogs", "Coffee", "Fries".</summary>
+    public static string ItemNamePlural(string preset)
+    {
+        var name = ItemName(preset);
+        if (string.IsNullOrEmpty(name)) return name;
+        var last = name.Split(' ').Last();
+        if (!Countable.Contains(last)) return name;
+        if (last.EndsWith("y")) return name[..^1] + "ies";
+        if (last.EndsWith("ch") || last.EndsWith("sh")) return name + "es";
+        return name + "s";
+    }
+
     public static int UnitCost(int price) => Mathf.Max(1, Mathf.CeilToInt(price * Plugin.WholesaleShare.Value));
 
     // ---- Selling ----
@@ -280,24 +318,41 @@ internal static class Store
             days = 0;
         }
         b.Orders.Add(new Order { Item = item, Quantity = qty, Arrives = arrives });
-        message = $"Ordered {qty} {ItemName(item)} for ¢{cost}" + (fromWallet > 0 ? $" (¢{fromWallet} from your wallet)" : "") +
+        message = $"Ordered {qty} {ItemNamePlural(item)} for ¢{cost}" + (fromWallet > 0 ? $" (¢{fromWallet} from your wallet)" : "") +
                   (days > 0 ? $", arriving in {days} days" : ", arriving soon (test setting)");
         return true;
     }
 
     // ---- Sending the till home ----
 
-    private const string Currency = "¢";
+    internal const string Currency = "¢";
 
     public static int TransferNet(int till) => Math.Max(0, till - Mathf.RoundToInt(Math.Max(0, till) * Plugin.TransferFee.Value));
 
-    /// <summary>A courier takes the till to the player: it arrives the next morning, less the courier's fee.</summary>
+    /// <summary>
+    /// What the till keeps back when you collect: a day's wages (and the manager's raise), so the business can pay
+    /// its staff on its own. Stock is bought from the day's takings. Rounded up to 10.
+    /// </summary>
+    public static int Float(Business b)
+    {
+        if (!Plugin.KeepFloat.Value) return 0;
+        var c = FindCompany(b.CompanyId);
+        if (c == null) return 0;
+        var need = StaffCount(c) * Plugin.WagePerStaff.Value + (b.ManagerRestocks ? Plugin.ManagerRaise.Value : 0);
+        return Mathf.CeilToInt(need / 10f) * 10;
+    }
+
+    /// <summary>What COLLECT or TRANSFER takes: the till above its float.</summary>
+    public static int Collectable(Business b) => Math.Max(0, b.Till - Float(b));
+
+    /// <summary>A courier takes the till (above its float) to the player: it arrives the next morning, less the courier's fee.</summary>
     public static string Transfer(Business b)
     {
-        var net = TransferNet(b.Till);
-        var fee = b.Till - net;
+        var take = Collectable(b);
+        var net = TransferNet(take);
+        var fee = take - net;
         b.Transfers.Add(new Transfer { Amount = net, Arrives = TodayMidnight() + 24f + Plugin.TransferHour.Value });
-        b.Till = 0;
+        b.Till -= take;
         return $"Courier booked: {Currency}{net} arrives tomorrow morning" + (fee > 0 ? $" ({Currency}{fee} fee)" : "");
     }
 
@@ -326,8 +381,8 @@ internal static class Store
                 b.Stock[o.Item] = (b.Stock.TryGetValue(o.Item, out var s) ? s : 0) + o.Quantity;
                 b.Orders.Remove(o);
             }
-            var what = string.Join(", ", due.Select(o => o.Quantity + " " + ItemName(o.Item)));
-            Plugin.Message($"{b.Name}: delivery arrived ({what})");
+            var what = string.Join(", ", due.Select(o => o.Quantity + " " + ItemNamePlural(o.Item)));
+            foreach (var o in due) b.Delivered[o.Item] = (b.Delivered.TryGetValue(o.Item, out var d) ? d : 0) + o.Quantity;
             Plugin.Logger.LogInfo($"{b.Name}: delivery arrived ({what})");
         }
     }
@@ -347,9 +402,13 @@ internal static class Store
             var unpaid = wages - fromTill - fromWallet;
             b.Till -= fromTill + unpaid;
             if (fromWallet > 0) GameplayController.Instance.AddMoney(-fromWallet, false, "proprietor_wages");
-            var detail = fromWallet > 0 ? $" (¢{fromWallet} from your wallet)" : "";
-            if (unpaid > 0) detail += $", ¢{unpaid} owed from the till";
-            Plugin.Message($"{b.Name}: paid ¢{wages} in wages{(raise > 0 ? $" (incl. the manager's ¢{raise} raise)" : "")}{detail}. Till: ¢{b.Till}", unpaid == 0);
+            b.Notes.Add($"Paid the staff {Currency}{wages} last night{(raise > 0 ? " (that's with my raise)" : "")}.");
+            if (fromWallet > 0) b.Notes.Add($"The till was short, so {Currency}{fromWallet} of it came out of your pocket.");
+            if (unpaid > 0)
+            {
+                b.Notes.Add($"We still owe {Currency}{unpaid} in wages. The till's in the red.");
+                b.BadNews = true;
+            }
             Plugin.Logger.LogInfo($"{b.Name}: wages ¢{wages} for {staff} staff: till ¢{fromTill}, wallet ¢{fromWallet}, unpaid ¢{unpaid}; till now ¢{b.Till}");
         }
     }

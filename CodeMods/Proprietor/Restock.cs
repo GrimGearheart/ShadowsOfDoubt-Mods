@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SOD.Common;
 using SOD.Common.Helpers.DialogObjects;
+using UnityEngine;
 
 namespace Proprietor;
 
@@ -88,48 +89,111 @@ internal static class Restock
         }
     }
 
-    /// <summary>Every morning: managers on a raise restock, and you get a report of what's still low or out.</summary>
+    /// <summary>
+    /// An hour before closing (11pm for places that never close), a manager on a raise orders whatever is running
+    /// low, paid from the day's takings in the till. It goes in the next morning's report.
+    /// </summary>
+    public static void BeforeClosing(int hour)
+    {
+        foreach (var b in Store.Owned.Values)
+        {
+            if (!b.ManagerRestocks) continue;
+            var company = Store.FindCompany(b.CompanyId);
+            if (company == null || hour != RestockHour(company)) continue;
+            var spent = 0;
+            var ordered = new List<string>();
+            var couldNotAfford = false;
+            // The manager never spends the money set aside for wages.
+            var keep = Store.Float(b);
+            foreach (var kv in Store.Menu(company))
+            {
+                var name = kv.Key.name;
+                var target = Store.RestockTarget(b, company, name);
+                while (Level(b, name) < target)
+                {
+                    var cost = Store.UnitCost(kv.Value) * Store.OrderSize(company);
+                    if (b.Till - cost < keep) { couldNotAfford = true; break; }
+                    Store.PlaceOrder(b, name, kv.Value, out _, tillOnly: true);
+                    spent += cost;
+                    if (!ordered.Contains(name)) ordered.Add(name);
+                }
+            }
+            if (spent > 0) b.Notes.Add($"Ordered more {List(ordered)} before closing, {Store.Currency}{spent} from the till.");
+            if (couldNotAfford)
+            {
+                b.Notes.Add("Couldn't order everything we need without touching the wage money.");
+                b.BadNews = true;
+            }
+            Plugin.Logger.LogInfo($"{b.Name}: manager restocked at {hour}:00 for ¢{spent}{(couldNotAfford ? " (till ran short)" : "")}; till now ¢{b.Till}");
+        }
+    }
+
+    /// <summary>The hour before the business closes; 11pm for places open round the clock.</summary>
+    public static int RestockHour(Company c)
+    {
+        var open = c.retailOpenHours.x;
+        var close = c.retailOpenHours.y;
+        if (close - open >= 23.5f || Mathf.Approximately(open % 24f, close % 24f)) return 23;
+        return ((Mathf.CeilToInt(close) - 1) % 24 + 24) % 24;
+    }
+
+    /// <summary>
+    /// Every morning each manager vmails you a report (wages, deliveries, last night's restocking, what's low, how
+    /// the regulars seem). One message tells you the reports are in.
+    /// </summary>
     public static void Morning(int hour)
     {
         if (hour != ReportHour) return;
+        var sent = 0;
+        var anyBad = false;
         foreach (var b in Store.Owned.Values)
         {
             var company = Store.FindCompany(b.CompanyId);
             if (company == null) continue;
             var menu = Store.Menu(company);
-            var notes = new List<string>();
+            var lines = new List<string>(b.Notes);
+            var bad = b.BadNews;
 
-            if (b.ManagerRestocks)
+            if (b.Delivered.Count > 0)
+                lines.Add("Deliveries came in: " + string.Join(", ", b.Delivered.Select(kv => $"{kv.Value} {Store.ItemNamePlural(kv.Key)}")) + ".");
+
+            var items = menu.Select(kv => kv.Key.name).ToList();
+            var outOf = items.Where(n => Stock(b, n) <= 0 && !OnOrder(b, n)).ToList();
+            var outComing = items.Where(n => Stock(b, n) <= 0 && OnOrder(b, n)).ToList();
+            var running = items.Where(n => Stock(b, n) > 0 && Stock(b, n) <= Plugin.LowStock.Value && !OnOrder(b, n)).ToList();
+            if (outOf.Count > 0)
             {
-                var spent = 0;
-                var couldNotAfford = false;
-                foreach (var kv in menu)
-                {
-                    var name = kv.Key.name;
-                    var target = Store.RestockTarget(b, company, name);
-                    while (Level(b, name) < target)
-                    {
-                        var cost = Store.UnitCost(kv.Value) * Store.OrderSize(company);
-                        if (b.Till < cost) { couldNotAfford = true; break; }
-                        Store.PlaceOrder(b, name, kv.Value, out _, tillOnly: true);
-                        spent += cost;
-                    }
-                }
-                if (spent > 0) notes.Add($"manager ordered stock for ¢{spent}");
-                if (couldNotAfford) notes.Add("the till couldn't cover all the restocking");
+                lines.Add($"We're out of {List(outOf)}.");
+                bad = true;
             }
+            if (outComing.Count > 0) lines.Add($"Out of {List(outComing)}, but more is on the way.");
+            if (running.Count > 0) lines.Add($"Running low on {List(running)}.");
 
-            var low = menu.Select(kv => kv.Key.name).ToList();
-            var outOf = low.Count(n => Stock(b, n) <= 0 && !OnOrder(b, n));
-            var running = low.Count(n => Stock(b, n) > 0 && Stock(b, n) <= Plugin.LowStock.Value && !OnOrder(b, n));
-            if (outOf > 0) notes.Add($"{outOf} item{(outOf == 1 ? "" : "s")} out of stock");
-            if (running > 0) notes.Add($"{running} running low");
+            var regulars = Loyalty.Report(b);
+            if (regulars != null) lines.Add(regulars);
+            if (lines.Count == 0) lines.Add("Quiet one. Nothing much to report.");
 
-            if (notes.Count == 0) continue;
-            var text = $"{b.Name}: " + string.Join(", ", notes);
-            Plugin.Message(text, outOf == 0 && running == 0);
-            Plugin.Logger.LogInfo("Morning report: " + text);
+            var signature = Reports.Manager(company)?.GetFirstName();
+            var body = "Boss,\n\n" + string.Join("\n", lines) + $"\n\nTill's at {Store.Currency}{b.Till}." +
+                       (signature != null ? $"\n\n- {signature}" : "");
+            Reports.Send(b, company, body);
+            Plugin.Logger.LogInfo($"Morning report from {b.Name}: " + string.Join(" ", lines));
+
+            b.Notes.Clear();
+            b.Delivered.Clear();
+            b.BadNews = false;
+            sent++;
+            anyBad |= bad;
         }
+        if (sent > 0)
+            Plugin.Message(sent == 1 ? "Your manager's morning report is in your vmail." : "Your managers' morning reports are in your vmail.", !anyBad);
+    }
+
+    /// <summary>"Fries", "Fries and Coffee", "Fries, Coffee and Donuts".</summary>
+    private static string List(List<string> items)
+    {
+        var names = items.Select(Store.ItemNamePlural).ToList();
+        return names.Count <= 1 ? names.FirstOrDefault() ?? "" : string.Join(", ", names.Take(names.Count - 1)) + " and " + names.Last();
     }
 
     private static int Stock(Business b, string item) => b.Stock.TryGetValue(item, out var n) ? n : 0;

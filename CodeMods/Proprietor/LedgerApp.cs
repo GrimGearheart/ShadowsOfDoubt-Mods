@@ -223,7 +223,7 @@ internal static class LedgerApp
         var staff = Store.StaffCount(company);
         var sending = b.Transfers.Sum(t => t.Amount);
         options.Add(Option(
-            $"TILL: {Currency}{b.Till}" + (sending > 0 ? $"\n{Currency}{sending} on its way to you" : "") +
+            $"TILL: {Currency}{b.Till}" + (Store.Float(b) > 0 ? $" (keeps {Currency}{Store.Float(b)})" : "") + (sending > 0 ? $"\n{Currency}{sending} on its way to you" : "") +
             $"\n{OpenState(company)}" +
             $"\n24h: {today.Count} sales, {Currency}{today.Sum(s => s.Total)}, {b.TurnedAway} turned away" +
             $"\n{(b.ManagerRestocks ? "Wages+raise" : "Wages")}: {Currency}{staff * Plugin.WagePerStaff.Value + (b.ManagerRestocks ? Plugin.ManagerRaise.Value : 0)}/day",
@@ -347,8 +347,8 @@ internal static class LedgerApp
                 RowKind.Back => "BACK",
                 RowKind.Business => "OPEN",
                 RowKind.Deposit when b != null => $"DEPOSIT {Currency}{Plugin.DepositStep.Value}",
-                RowKind.Till when b != null && remote => $"TRANSFER {Currency}{Store.TransferNet(b.Till)}",
-                RowKind.Till when b != null => $"COLLECT {Currency}{Math.Max(0, b.Till)}",
+                RowKind.Till when b != null && remote => $"TRANSFER {Currency}{Store.TransferNet(Store.Collectable(b))}",
+                RowKind.Till when b != null => $"COLLECT {Currency}{Store.Collectable(b)}",
                 RowKind.Item when b != null => $"ORDER {Store.OrderSize(Store.FindCompany(row.CompanyId))} - {Currency}{Store.UnitCost(row.Price) * Store.OrderSize(Store.FindCompany(row.CompanyId))}",
                 _ => null
             };
@@ -456,9 +456,10 @@ internal static class LedgerApp
             }
             else if (row.Kind == RowKind.Till)
             {
-                if (b.Till <= 0)
+                if (Store.Collectable(b) <= 0)
                 {
-                    Plugin.Message("The till is empty.", false);
+                    var keep = Store.Float(b);
+                    Plugin.Message(b.Till <= 0 ? "The till is empty." : $"The till only holds what it needs for wages and stock ({Currency}{keep}).", false);
                     Sound(cc, AudioControls.Instance.computerInvalidPasscode);
                     return false;
                 }
@@ -470,9 +471,10 @@ internal static class LedgerApp
                 }
                 else
                 {
-                    GameplayController.Instance.AddMoney(b.Till, true, "proprietor_collect");
-                    Plugin.Logger.LogInfo($"{b.Name}: collected ¢{b.Till}");
-                    b.Till = 0;
+                    var take = Store.Collectable(b);
+                    GameplayController.Instance.AddMoney(take, true, "proprietor_collect");
+                    b.Till -= take;
+                    Plugin.Logger.LogInfo($"{b.Name}: collected ¢{take}, left ¢{b.Till} in the till");
                 }
                 Sound(cc, AudioControls.Instance.computerPrint);
             }

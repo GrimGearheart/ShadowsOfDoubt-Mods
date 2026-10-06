@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+- **Managers report by vmail.** Each morning every manager vmails you a report (wages, deliveries, restocking, what's low or out, how the customers seem), replacing the pile of pop-ups at midnight and 7am. One message tells you the reports are in. The last week of reports is kept.
+- **Regulars come and go.** A regular turned away by empty shelves may switch to a rival; new customers may become regulars at a well-stocked place. It all happens quietly, the way it would for a real owner.
+- **Businesses earn the same wherever you are.** The game simulates distant citizens less, so businesses far from you were selling a fraction of what they sell with you nearby. The mod now makes up the difference from each business's own regulars and stock. Expect a lot more in the till.
+- **Restocking happens before closing,** from the day's takings, instead of first thing in the morning. The manager never spends the wage money.
+- **COLLECT and TRANSFER leave a day's wages in the till,** so a business keeps paying its staff while you take the profit (`Running.KeepFloat`).
+- **Rebalanced:** the manager's raise is now ¢25 a day (was ¢50), and demand per regular is 0.45 (was 0.25), measured in play. Config files still on the old defaults are updated automatically; values you changed yourself are kept.
+- Item names in reports are now plural ("out of Donuts").
+
 ## 1.2.0
 
 - **Give the manager a raise to handle restocking.** Offer it in conversation (in person, or by phone through staff on shift). The raise is paid with the wages, and every morning at 7 the manager orders whatever is running low, paid from the till.
