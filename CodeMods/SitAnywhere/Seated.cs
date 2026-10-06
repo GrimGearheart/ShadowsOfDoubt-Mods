@@ -84,7 +84,23 @@ internal static class Seated
         Prompts.Refresh();
     }
 
-    /// <summary>The game has taken over the player (KO, cutscene, its own transition): just let go.</summary>
+    /// <summary>
+    /// Back on your feet at once, where you stood before sitting. Used when the game is about to
+    /// move the player itself (talking to someone, a punch, a computer, lockpicking): its moves
+    /// start from, and return to, wherever the player is, so they have to start from standing.
+    /// </summary>
+    public static void StandNow(Player p)
+    {
+        if (!Active) return;
+        StopPassingTime(p);
+        Phase = Phase.None;
+        p.transform.position = standPos;
+        p.fps.m_MouseLook.Init(p.transform, p.fps.m_Camera.transform);
+        Restore(p);
+        Prompts.Refresh();
+    }
+
+    /// <summary>The game has already taken over the player: just let go.</summary>
     public static void Forget()
     {
         Phase = Phase.None;
@@ -100,10 +116,21 @@ internal static class Seated
             Phase = Phase.None;
             return;
         }
-        if (p.transitionActive || p.playerKOInProgress || p.inAirVent ||
-            (CutSceneController.Instance != null && CutSceneController.Instance.cutSceneActive))
+        if (p.transitionActive)
         {
             Forget();
+            return;
+        }
+        if (p.playerKOInProgress || p.inAirVent ||
+            (CutSceneController.Instance != null && CutSceneController.Instance.cutSceneActive))
+        {
+            StandNow(p);
+            return;
+        }
+        // Setting a route on the map and auto-travelling: get up so you can walk.
+        if (p.autoTravelActive && Phase is Phase.Seated or Phase.SittingDown)
+        {
+            StandUp(p);
             return;
         }
 
@@ -274,6 +301,27 @@ internal static class DamagePatch
     private static void Postfix(Player __instance, float amount)
     {
         if (amount > 0.01f && Seated.Phase is Phase.Seated or Phase.SittingDown) Seated.StandUp(__instance);
+    }
+}
+
+/// <summary>
+/// The game's own player moves (talking, attacks and blocks, computers, lockpicking, door peeks,
+/// hiding) remember where the player was and put them back there afterwards with collision on.
+/// Starting one while seated would leave you standing inside the seat or the roof, so stand first.
+/// </summary>
+[HarmonyPatch(typeof(Player), nameof(Player.TransformPlayerController))]
+internal static class GameTransitionPatch
+{
+    private static void Prefix(Player __instance)
+    {
+        try
+        {
+            Seated.StandNow(__instance);
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError(e);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "SitAnywhere",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/SitAnywhere",
   "description": "Sit on anything the right height: crates, benches, low walls, desk edges, or a rooftop ledge with your legs over the drop. Pass time there with your watch, like on a chair.",
   "dependencies": [

@@ -18,7 +18,7 @@ namespace SitAnywhere;
 /// transitions), so this mod seats the player itself: the character controller is switched off
 /// like during the game's transitions, and the player is placed so their eyes sit at seated height.
 /// </summary>
-[BepInPlugin("sodmods.sitanywhere", "Sit Anywhere", "1.0.0")]
+[BepInPlugin("sodmods.sitanywhere", "Sit Anywhere", "1.0.1")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;

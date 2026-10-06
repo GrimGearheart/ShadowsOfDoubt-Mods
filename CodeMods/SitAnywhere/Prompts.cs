@@ -80,7 +80,7 @@ internal static class Prompts
         var ic = InteractionController.Instance;
         return p.fps != null && p.fps.enableMovement && p.charController != null && p.charController.enabled &&
                p.charController.isGrounded && !p.transitionActive && !p.inAirVent && !p.autoTravelActive &&
-               !p.playerKOInProgress && ic != null && ic.lockedInInteraction == null && ic.carryingObject == null &&
+               !p.playerKOInProgress && p.currentVehicle == null && ic != null && ic.lockedInInteraction == null && ic.carryingObject == null &&
                !ic.dialogMode && ic.currentlyDragging == null &&
                !(ModifiersController.Instance != null && ModifiersController.Instance.ratDetectiveModifierEnabled);
     }
