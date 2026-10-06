@@ -36,7 +36,7 @@ Time speeds up until the alarm goes off. Moving or jumping stops it and gets you
 ## Good to know
 
 - **You can look around** while seated, up to 120° left or right.
-- **Talking to someone, fighting, or using a computer, lock or hiding spot gets you up first.**
+- **Talking to someone, or using a computer, lock or hiding spot, gets you up first.** You can still throw a punch from your seat.
 - **Getting hurt gets you up.** No fall damage from standing up off a high ledge.
 - **Crouching is off** while seated, and you can't sit inside a moving elevator.
 - **The game stays in charge.** Cutscenes, knockouts and air vents end sitting automatically.

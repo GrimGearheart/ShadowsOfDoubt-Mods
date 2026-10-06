@@ -2,7 +2,7 @@
 
 ## 1.0.1
 
-- Fixed: talking to someone, throwing a punch, using a computer, picking a lock, peeking under a door or hiding while seated could leave you standing inside the seat, or sink you into the roof on a ledge. You now get up first, back where you stood.
+- Fixed: talking to someone, using a computer, picking a lock, peeking under a door or hiding while seated could leave you standing inside the seat, or sink you into the roof on a ledge. You now get up first, back where you stood.
 - Setting a route on the map while seated now gets you up so you can walk there.
 - Being knocked out while seated no longer leaves you stuck.
 - You can't sit down inside a moving elevator.
