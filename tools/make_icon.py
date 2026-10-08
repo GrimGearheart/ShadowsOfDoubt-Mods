@@ -219,9 +219,26 @@ def management():
     return img
 
 
+def planner():
+    img, d = base("CITY PLANNER")
+    # A blueprint sheet: a grid of city tiles, a few coloured as districts, one pencilled-in building
+    x0, y0, n, cell = 192, 300, 5, 128
+    d.rectangle([x0 - 24, y0 - 24, x0 + n * cell + 24, y0 + n * cell + 24], fill="#1d2a3a", outline=TEXT, width=10)
+    fills = {(0, 0): RING, (1, 0): RING, (0, 1): RING, (3, 3): ACCENT, (4, 3): ACCENT, (3, 4): ACCENT, (2, 2): TEXT}
+    for i in range(n):
+        for j in range(n):
+            cx0, cy0 = x0 + i * cell + 14, y0 + j * cell + 14
+            f = fills.get((i, j))
+            d.rectangle([cx0, cy0, cx0 + cell - 28, cy0 + cell - 28], fill=f, outline=DIM, width=6)
+    # Pencil across the corner
+    d.line([x0 + 3 * cell + 40, y0 + 2 * cell + 40, x0 + n * cell + 60, y0 - 60], fill=ACCENT, width=40)
+    d.polygon([(x0 + 3 * cell + 20, y0 + 2 * cell + 60), (x0 + 3 * cell + 60, y0 + 2 * cell + 20), (x0 + 3 * cell + 5, y0 + 2 * cell + 75)], fill=TEXT)
+    return img
+
+
 if __name__ == "__main__":
     kind, out = sys.argv[1], sys.argv[2]
     img = {"squint": squint, "license": license_, "mantle": mantle, "prone": prone, "sanitation": sanitation, "city": city,
-           "management": management, "sit": sit}[kind]()
+           "management": management, "sit": sit, "planner": planner}[kind]()
     img.resize((256, 256), Image.LANCZOS).save(out)
     print("wrote", out)

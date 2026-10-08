@@ -1,6 +1,6 @@
 """Draws a street map of a generated Shadows of Doubt city.
 
-Usage: python tools/city_map.py <city.cit|city.citb | latest> <out.png>
+Usage: python CodeMods/CityPlanner/tools/city_map.py <city.cit|city.citb | latest> <out.png>
 """
 import collections
 import glob

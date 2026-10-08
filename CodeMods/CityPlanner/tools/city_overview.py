@@ -1,6 +1,6 @@
 """Draws an overview map of a generated city and reports wealth and street decoration by district.
 
-Usage: python tools/city_overview.py <city.cit|city.citb | latest> <out.png>
+Usage: python CodeMods/CityPlanner/tools/city_overview.py <city.cit|city.citb | latest> <out.png>
   "latest" picks the newest city in the game's Cities folder.
 """
 import collections

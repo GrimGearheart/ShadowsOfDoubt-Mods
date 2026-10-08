@@ -1,0 +1,2 @@
+# Files kept elsewhere in the project that ship in the package: <source> -> <path in the zip>
+tools/city-planner.html -> city-planner.html

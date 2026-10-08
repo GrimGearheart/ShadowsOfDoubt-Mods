@@ -1,5 +1,9 @@
 # City plan for City Planner (Margin City's own layout, as an example).
+# Put your plan in BepInEx/config/cityplan.txt, then pick "Planned city" as the size when starting a new game.
+# Lines starting with # are notes and are ignored.
 
+# Size = width x height in tiles, including the waterfront ring the game builds around the city (at least 5x5).
+# The map below is the blocks you plan: two smaller each way (this 9x10 city has 7 x 8 blocks). Population scales the number of residents (1 = the game's normal amount).
 [City]
 Size = 9x10
 Population = 0.75
@@ -15,6 +19,7 @@ B = The Bricks   | Residential | veryLow  | veryHigh
 S = West Stacks  | Industrial  | veryLow  | medium
 A = East Stacks  | Industrial  | veryLow  | medium
 
+# Buildings: a short code of your choice = the game's building name. Every map cell needs a building.
 [Buildings]
 CH = CityHall
 HO = Hotel
@@ -29,7 +34,8 @@ MI = MixedIndustrial
 CP = ChemicalPlant
 PK = Park
 
-# North at the top. Cell = District:Building, optional front /N /E /S /W.
+# North at the top. Cell = District:Building, optional front /N /E /S /W. Use ? as the building (e.g. H:?) to let
+# the game pick one that suits the district.
 [Map]
 H:TH H:OF H:TH/E T:PK T:TH/W T:OF T:TH
 H:TH H:TH H:TH/E H:PK T:TH/W T:TH T:TH
@@ -39,3 +45,11 @@ C:TS/N C:TS/N C:TS/N D:PK B:TS/N B:TS/N B:TS/N
 C:SH C:BN/N C:TS/E R:DI/N B:SH/W B:MI B:SH
 C:SH C:SH C:TS/E R:MI B:SH/W B:MI B:SH
 S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP
+
+# Optional: paint the streets between tiles (remove the # to use). Rows and columns count from the top left, like
+# the map; the side is N, E, S or W of those cells, or edge / inside for a block. Types: main, back, alley.
+# Gaps not listed are decided by the game. Margin City itself was generated without painted streets.
+# [Streets]
+# R3 C1-C7 S = main
+# R5-R7 C1-C3 edge = main
+# R5-R7 C1-C3 inside = back

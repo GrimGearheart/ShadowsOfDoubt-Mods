@@ -1,8 +1,8 @@
 {
-  "name": "MarginCity",
-  "version_number": "1.0.4",
+  "name": "CityPlanner",
+  "version_number": "1.1.0",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/CityPlanner",
-  "description": "A hand-planned city: rich north, poor south, the Ledger at its centre. Downtown towers, the Commons, Chinatown, a Red Light strip, the Bricks and the Stacks, every street and district laid out on purpose.",
+  "description": "Design your own city in a planner that sends it straight to the game. Paint districts and let the game fill in the rest, or choose every building, facing and street yourself. Also loads city packs like Margin City.",
   "dependencies": [
     "BepInEx-BepInExPack_IL2CPP-6.0.755"
   ]

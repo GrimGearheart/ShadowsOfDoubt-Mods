@@ -37,13 +37,13 @@ Only needed when the mod saves something new or changes what it saves.
 
 ## 5. Package and publish
 
-- [ ] 🤖 **Package:** `python tools/package_thunderstore.py CodeMods/<Mod>` makes the zip in `thunderstore/dist` and copies it to `Releases/` (one current zip per mod, not published to GitHub).
-- [ ] 🎮 **Upload** the zip from `Releases/` to Thunderstore as a new version of the mod.
+- [ ] 🤖 **Package:** `python tools/package_thunderstore.py CodeMods/<Mod>` (or `Cities/<City>`) makes the zip in `thunderstore/dist` and copies it to `Releases/` (one current zip per mod, not published to GitHub).
+- [ ] 🎮 **Upload** the zip from `Releases/` to Thunderstore as a new version of the mod. If a package depends on a new version of another of ours (Margin City → City Planner), upload that one first.
 - [ ] 🤖 **GitHub:** commit the changes and push, so the source matches the release.
 - [ ] 🎮 **Tell people:** post the update on Discord ("In the base game…" / **With this mod:** / link). For bug fixes, reply to whoever reported it and remind them to **update in their mod manager**. Installed mods don't update by themselves.
 
 ## Before a mod's very first release
 
 - [ ] 🤖 **Icon** (256×256, `tools/make_icon.py`), **manifest** description under 250 characters, **dependencies** listed, **website link** to the mod's folder on GitHub.
-- [ ] 🤖 **Add the mod's folder to the whitelist** in `.gitignore`, or it won't be published to GitHub.
+- [ ] 🤖 **Add the mod's folder (or city pack's) to the whitelist** in `.gitignore`, or it won't be published to GitHub.
 - [ ] 🤖 **Root README:** add the mod to the table.

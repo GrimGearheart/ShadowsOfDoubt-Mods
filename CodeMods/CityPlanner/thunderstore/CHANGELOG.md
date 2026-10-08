@@ -1,20 +1,15 @@
 # Changelog
 
-## 1.0.4
+## 1.1.0
 
-- Added a note that the mod is made with the help of AI, and a section on installing without a mod manager. No changes to the mod itself.
+- City Planner is now its own mod. It used to ship inside Margin City; Margin City is now a city pack that uses it.
+- City packs: any installed mod that ships city files gets them added to your city list, not just Margin City.
+- **Planner in the game:** a *City Planner* button on the New Game screen opens the planner in your browser, and *Send to game* hands your plan straight to the game. No files to copy, no restart. The planner also comes with the mod as `city-planner.html`.
+- **Plan as much or as little as you like:** any tile can be left on *game decides* (`?` in the plan), so you can just paint districts and let the game choose the buildings.
+- New planner buttons: *Start blank*, *Clear districts*, *Clear streets*, and *Undo* for the last clear.
+- Hand-edited `cityplan.txt` changes are picked up when you open New Game, and every planned city size is remembered automatically.
+- **Painted streets:** choose which gaps between tiles are main roads, back streets or alleys (*Paint streets* on the planner page, or a `[Streets]` section in the plan). Buildings face the busiest street beside them, so main roads get the frontages and shops. Touching alleys join up with no dead-end walls.
 
-## 1.0.3
+## 1.0.0 – 1.0.4
 
-- Fixed Margin City sometimes missing from the city list: the city file is now found wherever the mod manager unpacks it in the mod's folder.
-- The log now says where it looked and what it found ("Bundled city files found").
-
-## 1.0.2
-
-- Added a "Safe to remove?" note to the description and a link to the source code. No changes to the mod itself.
-
-## 1.0.1
-- Added a map of Margin City to the mod page and to the mod's folder.
-
-## 1.0.0
-- Initial release: Margin City, a hand-planned 9 x 10 city (about 1,000 residents) with named districts, landmarks and streets, plus the City Planner used to build it.
+Released as part of [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/); see its changelog.

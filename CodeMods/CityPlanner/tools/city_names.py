@@ -1,10 +1,10 @@
 """Naming pass for a generated Shadows of Doubt city.
 
-  python tools/city_names.py export <city.citb> <names.csv>
+  python CodeMods/CityPlanner/tools/city_names.py export <city.citb> <names.csv>
       Writes every nameable thing (city, districts, streets, buildings, businesses) to a spreadsheet with an
       empty "new_name" column.
 
-  python tools/city_names.py apply <city.citb> <names.csv>
+  python CodeMods/CityPlanner/tools/city_names.py apply <city.citb> <names.csv>
       Reads the spreadsheet and writes a renamed copy of the city next to the original (the original is not
       touched). Rows with an empty new_name are left alone. Renaming the city changes its share code and file
       name, so saves made in the old city keep using the old file.

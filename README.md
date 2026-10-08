@@ -11,14 +11,15 @@ Source code for The Protectorate's [Shadows of Doubt](https://store.steampowered
 | [Sit Anywhere](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/SitAnywhere/) | Sit on crates, benches, low walls and rooftop ledges, and pass time there | [CodeMods/SitAnywhere](CodeMods/SitAnywhere) |
 | [Detective License](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/DetectiveLicense/) | Crime scene permits and a private investigator's license from City Hall | [CodeMods/DetectiveLicense](CodeMods/DetectiveLicense) |
 | [Sanitation Department](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/SanitationDepartment/) | Get paid to clean the streets and crime scenes | [CodeMods/SanitationDepartment](CodeMods/SanitationDepartment) |
-| [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/) | A hand-planned city, and the City Planner that built it | [CodeMods/CityPlanner](CodeMods/CityPlanner) |
+| [City Planner](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/CityPlanner/) | Design your own city in a planner that sends it to the game: paint districts, or choose every building and street | [CodeMods/CityPlanner](CodeMods/CityPlanner) |
+| [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/) | A hand-planned city, built with City Planner | [Cities/MarginCity](Cities/MarginCity) |
 | [Under New Management](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/UnderNewManagement/) | Buy and run diners, cafés and bars | [CodeMods/Proprietor](CodeMods/Proprietor) |
 
-`CodeMods/Shared` holds code used by more than one mod (the credentials card on the pause screen).
+`CodeMods/Shared` holds code used by more than one mod (the credentials card on the pause screen). `Cities/` holds city packs: content only, no code, loaded by City Planner. City Planner's planner page and city scripts are in `CodeMods/CityPlanner/tools`.
 
 ## Are they safe?
 
-- **No internet access, nothing outside the game.** The mods patch the game's own code while it runs (BepInEx + Harmony) and write small text files next to your save games. They don't touch the save files themselves.
+- **No internet access, nothing outside the game.** The mods patch the game's own code while it runs (BepInEx + Harmony) and write small text files next to your save games. They don't touch the save files themselves. The one exception is City Planner's *Send to game*: the planner page in your browser hands plans to the game over a connection that only works on your own PC, only while the game runs.
 - **Readable.** The released DLLs aren't obfuscated. Open one in [ILSpy](https://github.com/icsharpcode/ILSpy) and compare it with the source here, or scan the download on [VirusTotal](https://www.virustotal.com/).
 - **Removable.** Each mod's page has a "Safe to remove?" section. All of them can be removed without breaking saves, except that saves made in Margin City need Margin City to load.
 
@@ -30,7 +31,7 @@ Each mod is a .NET 6 class library for BepInEx 6 (IL2CPP). The projects referenc
 dotnet build -c Release CodeMods/Prone
 ```
 
-A Release build copies the DLL into the game's `BepInEx/plugins` folder. `tools/package_thunderstore.py CodeMods/<Mod>` builds the Thunderstore zip from the mod's `thunderstore` folder.
+A Release build copies the DLL into the game's `BepInEx/plugins` folder. `tools/package_thunderstore.py CodeMods/<Mod>` (or `Cities/<City>` for a city pack) builds the Thunderstore zip from the `thunderstore` folder.
 
 ## How they're made
 

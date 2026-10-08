@@ -1,83 +1,93 @@
-# Margin City
+# City Planner
 
-*The ruling class watches the profit margins. Everyone else lives in them.*
+Design your own Shadows of Doubt city instead of rolling random seeds. You decide the size, how many people live there, where each district goes and how rich it is. Then plan as much or as little of the rest as you like: choose every building and street yourself, or leave any of them to the game. Interiors and residents are always generated as usual.
 
-Margin City is a hand-planned city for Shadows of Doubt. Instead of a random layout, every district, landmark and main street sits where it does for a reason: money in the north, the civic heart in the middle, and the poor packed against the southern waterfront. From almost anywhere, a glance at the skyline tells you where you are.
+**Plan it loosely or exactly:**
+- **Quick:** paint the districts and leave everything else on *game decides*. The game picks buildings that suit each district and lays out the streets itself.
+- **In between:** place the landmarks you care about (City Hall, a hotel, a park belt) and let the game fill in the rest.
+- **Exact:** choose the building on every tile, which way each one faces, and which gaps between tiles are main roads, back streets or alleys.
 
-![Map of Margin City](https://i.imgur.com/hHXNUu5.png)
+City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/). It also installs city packs: any mod that ships city files gets them added to your city list.
 
-*A copy of this map (`Margin City map.png`) is in the mod's folder.*
+## What you control
 
-## The city
+- **Size:** how many blocks wide and tall, from 3 × 3 to 14 × 14, so bigger than the game's own largest if you want. The game adds a ring of waterfront around the blocks you plan.
+- **Population:** fewer or more residents than the game would normally put in.
+- **Districts:** where each one is, its name, its type (Residential, CBD, Chinatown, Red Light, Industrial…), its wealth and its density.
+- **Buildings (optional):** which building goes on each tile, and which side its front faces. Tiles left on *game decides* get a building the game picks for that district.
+- **Streets (optional):** paint any gap between two tiles as a main road, back street or alley. Gaps you leave alone are decided by the game.
 
-| District | What it is |
+The plan also changes how wealth works in your city:
+- **Homes take their wealth from their district**, so a rich district is rich from the ground floor up (in the base game it mostly depends on how high up a flat is).
+- **Clean streets in rich districts.** Shacks, barrel fires and street junk stay out of them.
+- **Themed streets follow the districts.** Chinatown's gates appear where streets enter or leave Chinatown.
+- **Optional open alleys:** in districts you list, alleys become back streets without dead-end walls.
+
+## How to plan a city
+
+1. **Start the game, open *New Game*, and click *City Planner*.** The planner opens in your web browser, on the plan the game is using if you have one, otherwise on a blank 5 × 5 blocks. *Load Margin City example* shows a finished plan to learn from.
+2. **Plan the city:** set the size, *Paint districts*, then pick buildings tile by tile or leave them on *game decides*. *Paint streets* lets you paint the strips between tiles. The *Checks* panel flags anything the game won't allow.
+3. **Click *Send to game*.** The game must be running; any screen is fine. If it's busy generating a city, your plan is used for the next one.
+4. **On the New Game screen, pick "Planned city (… blocks)" as the city size** and generate. Keep the game window in front while it generates: it pauses in the background.
+
+Your plan is also saved as `BepInEx/config/cityplan.txt`, so it's still there next time you start the game. Prefer a text editor? Write that file yourself (`cityplan.example.txt` in the mod's folder is Margin City's plan, with comments); City Planner picks up changes when you open *New Game*. `city-planner.html` in the mod's folder also works if you open it straight from disk.
+
+Not happy with the result? Generate again with a different seed: your districts, buildings and painted streets stay where you put them, while everything else changes.
+
+## Painted streets
+
+Every pair of neighbouring buildings has a road between them; you choose what kind:
+
+- **Main road:** a named street. Main roads run straight and change name where they cross another main road.
+- **Back street:** a quiet lane.
+- **Alley:** a narrow-feeling lane with alley dressing. Alleys that touch become one alley, so no dead-end walls split them.
+
+Buildings turn to face the busiest street beside them, and shops prefer busy streets, so a painted main road gets the frontages and the businesses. A front you set on a tile always wins.
+
+In `cityplan.txt` the streets are a `[Streets]` section, counted like the map (rows and columns from the top left):
+
+```
+[Streets]
+R3 C1-C7 S = main          # the south side of row 3, columns 1 to 7
+R5-R7 C1-C3 edge = main    # all the way round a 3 x 3 block
+R5-R7 C1-C3 inside = back  # the lanes inside it
+```
+
+The gaps can't be added, removed or narrowed: every road is as wide as the game makes it. Without a `[Streets]` section, the game lays out all streets itself.
+
+## Settings
+
+In `BepInEx/config/sodmods.cityplanner.cfg`:
+
+| Setting | What it does |
 |---|---|
-| **The Heights** and **Park Terrace** | Old money. Quiet town-houses and apartment towers on clean streets, split by Founders Avenue. |
-| **Downtown** | The skyline: **the Ledger** (City Hall, where the city keeps the books on everyone), flanked by the spired **Credit** and **Debit** towers, with the Dividend and the Equity beside them. |
-| **The Commons** | A park belt across the whole city, right in front of the Ledger. Cross it and you're in the other half of town. |
-| **Chinatown** | Shop-houses around the old **Jade Mansion** tower: Golden Lotus, Jade Garden, Wing Lee Noodle House, Kam Fung Pawn. Paifang gates mark the ways in. |
-| **Red Light** | A neon strip running south from **Lantern Square**: The All-Nighter diner, the back rooms on Velvet Street and Neon Row, and **Hotel Lowtide** at the bottom, by the water. |
-| **The Bricks** | The worst block in town: the Fathoms slum stacks, back-alley workshops and a few shops that shouldn't be open. |
-| **The Stacks** | Chemical plants and workshops along the waterfront, west and east of the Hotel. |
+| `Wealth / DistrictHomeWealth` | Homes take their wealth from their district (on by default). |
+| `Wealth / AverageStreetWealth` | Street decoration follows the average wealth along the street (on). |
+| `Wealth / StreetThemes` | Themed street decoration follows the districts a street runs through (on). |
+| `Wealth / ChinatownGatesAtEdges` | Chinatown's gates only where streets enter or leave it (on). |
+| `Wealth / GritDecorations`, `GritFreeFrom` | Which street decorations count as grit, and from which wealth level they're kept out. |
+| `Streets / OpenAlleysIn` | Districts (by planned name) where alleys become back streets. Not used when the plan paints its own streets. |
+| `Sizes / Keep` | Every city size you've planned, so cities made at those sizes still load. Filled in automatically; never remove or reorder entries. |
+| `Planner / Port` | The port the planner page uses to send plans to the game (on this PC only). Change it only if another program needs port 47811. |
 
-Some streets to know: **Ledger Row** and **Treasury Street** along the Commons, **Margin Street** (the line between the rich and poor halves), **Velvet Street** and **Neon Row** down the strip, and **Smokestack Row** and **Wharf Road** on the waterfront.
+Every setting only affects cities generated with a plan. Without a `cityplan.txt`, city generation is unchanged.
 
-Behind the layout:
-- **Wealth follows the district.** Homes in the Heights are genuinely richer than homes in the Bricks: furniture, finishes, grime and the people who live there.
-- **Clean streets uptown, grit downtown.** Shacks, barrel fires and junk stay out of the wealthy districts.
-- **Themed streets.** Chinatown's gates and the Red Light's dressing follow the streets that actually run through those districts.
-- **About 1,000 residents** in a 9 × 10 block city: bigger than the game's largest size, but tuned to stay smooth.
+## Is the planner connection safe?
 
-## How to play
-
-1. Install with r2modman or Gale (BepInExPack is installed for you).
-2. Launch the game **from the mod manager** (*Start modded*). Margin City is copied into your cities.
-3. Start a **new game** and pick **Margin City** from the city list.
-
-Keep this mod installed while you play Margin City. The city is a size the game doesn't offer by itself, so it needs the mod to load.
-
-## Manual install (without a mod manager)
-
-**1. Install BepInEx (once).**
-- Download [BepInExPack_IL2CPP](https://thunderstore.io/c/shadows-of-doubt/p/BepInEx/BepInExPack_IL2CPP/) 6.0.755 with *Manual Download*.
-- Copy the **contents of its `BepInExPack` folder** into the game folder, next to `Shadows of Doubt.exe` (in Steam: right-click the game › *Manage* › *Browse local files*).
-- Launch the game from Steam once. **The first launch takes a few minutes** while BepInEx sets itself up (a console window fills with text). Quit once you reach the main menu.
-
-**2. Install Margin City.**
-- Download this mod with *Manual Download*.
-- Create the folder `BepInEx\plugins\MarginCity` in the game folder and copy **everything in the zip** into it, including the `Cities` folder.
-
-**3. Play.** Launch from Steam as usual and pick Margin City under *New Game*.
-
-Good to know:
-- **Updates are manual:** download the new version and replace the files.
-- **Turning mods off:** rename `winhttp.dll` in the game folder (for example to `winhttp.dll.off`) and the game starts without mods.
-- **Steam Deck / Linux (Proton):** also set the game's launch options to `WINEDLLOVERRIDES="winhttp=n,b" %command%`, or BepInEx won't load.
-- **Don't mix the two ways:** if you use r2modman or Gale, launch from the manager and don't also install BepInEx into the game folder.
-
-## Margin City isn't in the city list?
-
-1. **Start the game from your mod manager** (r2modman or Gale: *Start modded*). Starting it straight from Steam doesn't load mods installed by a manager.
-2. **Still missing?** Copy the two `Margin City…` files (`.citb` and `.txt`) from the mod's folder into `%USERPROFILE%\AppData\LocalLow\ColePowered Games\Shadows of Doubt\Cities`, then restart. In r2modman, *Settings › Browse profile folder* opens the mod folders (look in `BepInEx/plugins`).
-3. If that doesn't help, send us your `BepInEx/LogOutput.log` (search it for "City Planner").
-
-## Make your own planned city
-
-The mod includes the **City Planner** that built Margin City. Put a plan in `BepInEx/config/cityplan.txt` and choose **"Planned city"** as the size when generating a new city. The game builds your layout: districts, wealth, a building on every block and which way each one faces. It still generates the streets, interiors and residents itself. Margin City's own plan is included as `cityplan.example.txt` to start from. Without a plan file, city generation is unchanged.
+*Send to game* goes from your browser to the game over a connection that only works on your own PC. Nothing goes over the internet, and only the City Planner page can use it: plans from anywhere else are refused. It's open only while the game is running.
 
 ## Safe to remove?
 
-**Not for Margin City saves.** Margin City is a city size the base game doesn't have, so saves made in it need this mod to load. Keep it installed while you play Margin City. Saves in any other city aren't affected and load normally without it.
+**Not for planned cities with a custom size.** A city made at a size the game doesn't have (such as 9 × 10) needs City Planner to load, and so does any city pack built that way, including Margin City. Saves in normal-sized cities aren't affected and load without it.
 
 ## Compatibility
 
 - Built for the main (IL2CPP) branch of the game.
-- Works alongside other mods, including The Protectorate's (Sanitation Department, Detective License and the rest).
-- Saves made in Margin City need this mod to load.
+- Works alongside other mods, including The Protectorate's.
 
 ## Feedback
 
-Found something odd in the city, or a name that doesn't fit? Leave a comment on the Thunderstore page.
+Built a city you're proud of? Share the plan or the share code on the Thunderstore page.
 
 ---
 

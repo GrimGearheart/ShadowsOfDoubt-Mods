@@ -17,7 +17,7 @@ namespace CityPlanner;
 /// population, districts (type, name, wealth) and the building on every tile. Pick "Planned city" in the
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.0.4")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.1.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -32,12 +32,17 @@ public class Plugin : BasePlugin
     internal static BepInEx.Configuration.ConfigEntry<string> OpenAlleysIn;
     internal static BepInEx.Configuration.ConfigEntry<int> EdgeGateReach;
     internal static BepInEx.Configuration.ConfigEntry<BuildingPreset.LandValue> GritFreeFrom;
+    internal static BepInEx.Configuration.ConfigEntry<int> PlannerPort;
+    internal static string PlanPath => Path.Combine(Paths.ConfigPath, "cityplan.txt");
+    private static DateTime planFileTime;
 
     public override void Load()
     {
         Logger = Log;
         KeepSizes = Config.Bind("Sizes", "Keep", "10x10,9x10",
-            "Sizes of cities made with earlier plans, so they still load. Only ever add to the end of this list; never remove or reorder.");
+            "City sizes planned so far, so cities made at those sizes still load. Planned sizes are added automatically. Never remove or reorder entries.");
+        PlannerPort = Config.Bind("Planner", "Port", 47811,
+            "The planner page sends plans to the game through this port, on this PC only. Change it only if another program uses it; the page opened from the game's City Planner button follows the change.");
         HomeWealth = Config.Bind("Wealth", "DistrictHomeWealth", true, "Homes take their wealth mainly from their district (otherwise mostly from floor height, as in vanilla).");
         StreetWealth = Config.Bind("Wealth", "AverageStreetWealth", true, "Streets take the average wealth of the tiles they cover (vanilla: their first tile), for street decoration.");
         StreetThemes = Config.Bind("Wealth", "StreetThemes", true,
@@ -52,40 +57,69 @@ public class Plugin : BasePlugin
             "Districts at this land value or above get none of the grit decorations.");
         LogPerformance = Config.Bind("Debug", "LogPerformance", false, "Write frame rate and memory use to the log every minute.");
         InstallBundledCities();
-        var path = Path.Combine(Paths.ConfigPath, "cityplan.txt");
-        try
-        {
-            string error = null;
-            Plan = File.Exists(path) ? Plan.Load(path, out error) : null;
-            if (Plan == null && File.Exists(path)) Log.LogError("City plan not loaded: " + error);
-            else if (Plan == null) Log.LogInfo("No city plan in the config folder: city generation is unchanged.");
-            else Log.LogInfo($"City plan loaded: {Plan.Width}x{Plan.Height}, {Plan.Districts.Count} districts, population x{Plan.Population}");
-        }
-        catch (Exception e)
-        {
-            Log.LogError("City plan not loaded: " + e.Message);
-        }
+        ReloadPlanFile(force: true);
+        if (Plan == null && !File.Exists(PlanPath)) Log.LogInfo("No city plan in the config folder: city generation is unchanged.");
         new Harmony("sodmods.cityplanner").PatchAll(typeof(Plugin).Assembly);
+        AddComponent<PlannerPump>();
+        PlannerLink.Start(PlannerPort.Value);
         Log.LogInfo("City Planner loaded");
     }
 
     /// <summary>
-    /// Cities shipped with the mod (in its Cities folder) are copied into the game's own Cities folder, where the
-    /// new-game screen lists them. A city is copied again only if the shipped file differs (an update).
+    /// Reads cityplan.txt again if it changed since it was last read (someone edited it by hand), so a new plan
+    /// doesn't need a restart. Not while a city is generating.
+    /// </summary>
+    internal static void ReloadPlanFile(bool force = false)
+    {
+        try
+        {
+            if (!File.Exists(PlanPath)) return;
+            var time = File.GetLastWriteTimeUtc(PlanPath);
+            if (!force && time == planFileTime) return;
+            planFileTime = time;
+            var plan = Plan.Load(PlanPath, out var error);
+            if (plan == null)
+            {
+                Logger.LogError("City plan not loaded: " + error);
+                return;
+            }
+            Use(plan, "loaded from cityplan.txt");
+        }
+        catch (Exception e)
+        {
+            Logger.LogError("City plan not loaded: " + e.Message);
+        }
+    }
+
+    /// <summary>Makes a plan the current one (the next planned city is generated from it).</summary>
+    internal static void Use(Plan plan, string how)
+    {
+        Plan = plan;
+        Sizes.Remember(plan.Width, plan.Height);
+        Sizes.RefreshDropdown();
+        Logger.LogInfo($"City plan {how}: {plan.Width}x{plan.Height}, {plan.Districts.Count} districts, population x{plan.Population}" +
+                       (plan.Streets.Count > 0 ? $", {plan.Streets.Count} painted streets" : ""));
+    }
+
+    /// <summary>Called after the planner page wrote cityplan.txt, so the file watcher doesn't read it again.</summary>
+    internal static void NoteFileWritten()
+    {
+        try { planFileTime = File.GetLastWriteTimeUtc(PlanPath); } catch { }
+    }
+
+    /// <summary>
+    /// City packs (any mod in the plugins folder that ships .citb files, such as Margin City) are copied into the
+    /// game's own Cities folder, where the new-game screen lists them. A city is copied again only if the shipped
+    /// file differs (an update).
     /// </summary>
     private void InstallBundledCities()
     {
         try
         {
-            // BepInEx loads plugins without a file location, so find this mod's folder by its dll. Mod managers
-            // don't all keep the package's folders as they are, so the city files are searched for anywhere in
-            // the mod's folder (and, failing that, anywhere in the plugins folder).
-            var dll = Directory.GetFiles(Paths.PluginPath, "CityPlanner.dll", SearchOption.AllDirectories).FirstOrDefault();
-            var modDir = dll == null ? null : Path.GetDirectoryName(dll);
-            var cities = modDir == null ? new string[0] : Directory.GetFiles(modDir, "*.citb", SearchOption.AllDirectories);
-            if (cities.Length == 0)
-                cities = Directory.GetFiles(Paths.PluginPath, "Margin City*.citb", SearchOption.AllDirectories);
-            Log.LogInfo($"Mod folder: {modDir ?? "not found"}. Bundled city files found: {cities.Length}");
+            // City packs are separate mods, and mod managers don't all keep a package's folders as they are, so
+            // city files are searched for anywhere in the plugins folder.
+            var cities = Directory.GetFiles(Paths.PluginPath, "*.citb", SearchOption.AllDirectories);
+            Log.LogInfo($"City files found in {Paths.PluginPath}: {cities.Length}");
             if (cities.Length == 0) return;
 
             var target = Path.Combine(Application.persistentDataPath, "Cities");
@@ -121,20 +155,64 @@ internal static class Sizes
     internal static int VanillaCount = -1;
 
     /// <summary>
-    /// Adds the extra sizes. A city remembers its size as a slot in this list, so slots must never move:
-    /// sizes from earlier plans (Sizes.Keep in the config) come first, in a fixed order, then the plan's size.
+    /// Adds the extra sizes. A city remembers its size as a slot in this list, so slots must never move: every
+    /// planned size is kept in the config (Sizes.Keep), in the order it was first planned, and the list is built
+    /// from that.
     /// </summary>
     public static void Ensure()
     {
         var list = CityControls.Instance?.citySizes;
         if (list == null || VanillaCount >= 0) return;
+        // Into the config first (the live list isn't built yet), so the plan's size takes its fixed place below.
+        if (Plugin.Plan != null) Remember(Plugin.Plan.Width, Plugin.Plan.Height);
         VanillaCount = list.Count;
         foreach (var entry in Plugin.KeepSizes.Value.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
             var p = entry.Trim().ToLowerInvariant().Split('x');
             if (p.Length == 2 && int.TryParse(p[0], out var x) && int.TryParse(p[1], out var y)) Add(list, x, y);
         }
-        if (Plugin.Plan != null) Add(list, Plugin.Plan.Width, Plugin.Plan.Height);
+    }
+
+    /// <summary>Keeps a planned size for good (config first, then the live list if it's already built).</summary>
+    public static void Remember(int w, int h)
+    {
+        var entries = Plugin.KeepSizes.Value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(e => e.Trim().ToLowerInvariant()).ToList();
+        if (!entries.Contains($"{w}x{h}"))
+        {
+            entries.Add($"{w}x{h}");
+            Plugin.KeepSizes.Value = string.Join(",", entries);
+        }
+        var list = CityControls.Instance?.citySizes;
+        if (list != null && VanillaCount >= 0) Add(list, w, h);
+    }
+
+    /// <summary>The size list entry for a planned city. Players count the blocks they plan, not the waterfront ring.</summary>
+    public static string Label(int w, int h) => $"Planned city ({w - 2} × {h - 2} blocks)";
+
+    /// <summary>Rewrites the extra entries of the city size list (after the vanilla ones), e.g. once a new plan arrives.</summary>
+    public static void RefreshDropdown()
+    {
+        try
+        {
+            var dd = MainMenuController.Instance?.citySizeDropdown?.dropdown;
+            var list = CityControls.Instance?.citySizes;
+            if (dd == null || list == null || VanillaCount < 0) return;
+            while (dd.options.Count > VanillaCount) dd.options.RemoveAt(dd.options.Count - 1);
+            var plan = Plugin.Plan;
+            for (var i = VanillaCount; i < list.Count; i++)
+            {
+                var w = Mathf.RoundToInt(list[i].v2.x);
+                var h = Mathf.RoundToInt(list[i].v2.y);
+                // Every slot needs an entry: the game maps dropdown position to size slot.
+                var planned = plan != null && w == plan.Width && h == plan.Height;
+                dd.options.Add(new TMP_Dropdown.OptionData(planned ? Sizes.Label(w, h) : $"Extra large ({w - 2} × {h - 2} blocks)"));
+            }
+            dd.RefreshShownValue();
+        }
+        catch (Exception e)
+        {
+            Plugin.Logger.LogError(e);
+        }
     }
 
     private static void Add(Il2CppSystem.Collections.Generic.List<CityControls.CitySize> list, int w, int h)
@@ -149,31 +227,14 @@ internal static class Sizes
 [HarmonyPatch(typeof(MainMenuController), nameof(MainMenuController.LoadDropdownContent))]
 internal static class DropdownPatch
 {
-    private static void Prefix() => Sizes.Ensure();
-
-    private static void Postfix(MainMenuController __instance)
+    private static void Prefix()
     {
-        try
-        {
-            var dd = __instance.citySizeDropdown?.dropdown;
-            var list = CityControls.Instance.citySizes;
-            if (dd == null || Sizes.VanillaCount < 0) return;
-            var plan = Plugin.Plan;
-            for (var i = Sizes.VanillaCount; i < list.Count; i++)
-            {
-                var w = Mathf.RoundToInt(list[i].v2.x);
-                var h = Mathf.RoundToInt(list[i].v2.y);
-                // Every slot needs an entry: the game maps dropdown position to size slot.
-                var planned = plan != null && w == plan.Width && h == plan.Height;
-                dd.options.Add(new TMP_Dropdown.OptionData(planned ? $"Planned city ({w}x{h})" : $"Extra large {w}x{h}"));
-            }
-            dd.RefreshShownValue();
-        }
-        catch (Exception e)
-        {
-            Plugin.Logger.LogError(e);
-        }
+        // A plan edited by hand since the game started is picked up here, before the list is drawn.
+        if (!PlannerLink.Generating) Plugin.ReloadPlanFile();
+        Sizes.Ensure();
     }
+
+    private static void Postfix() => Sizes.RefreshDropdown();
 }
 
 [HarmonyPatch(typeof(Toolbox), nameof(Toolbox.GetCitySizeFromValue))]
@@ -284,7 +345,8 @@ internal static class BuildingsPatch
                 tile.landValue = planned.District.LandValue;
                 tile.density = planned.District.Density;
 
-                if (!plan.Tiles.TryGetValue((c.x, c.y), out var exact) || tile.building != null) continue;
+                // Tiles left to the game ("?") are filled by its own building step, which runs next.
+                if (!plan.Tiles.TryGetValue((c.x, c.y), out var exact) || exact.Building == null || tile.building != null) continue;
                 if (!presets.TryGetValue(exact.Building, out var preset))
                 {
                     Plugin.Logger.LogError($"Unknown building '{exact.Building}' at {c}");
@@ -351,6 +413,8 @@ internal static class OpenAlleys
 {
     public static void Run()
     {
+        // Painted streets decide alleys themselves, and joined alleys are already one street with no walls between.
+        if (Plugin.Plan.Streets.Count > 0) return;
         try
         {
             var districts = new HashSet<string>(Plugin.OpenAlleysIn.Value.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(d => d.Trim()),

@@ -20,14 +20,14 @@
 !/CodeMods/SitAnywhere/
 !/CodeMods/Shared/
 
+!/Cities/
+/Cities/*
+!/Cities/MarginCity/
+
 !/tools/
 /tools/*
 !/tools/package_thunderstore.py
 !/tools/make_icon.py
-!/tools/city_map.py
-!/tools/city_names.py
-!/tools/city_overview.py
-!/tools/city-planner.html
 
 # Build output and packaged zips
 bin/
@@ -35,3 +35,4 @@ obj/
 dist/
 *.user
 .vs/
+__pycache__/
