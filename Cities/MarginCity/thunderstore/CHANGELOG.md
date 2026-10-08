@@ -3,6 +3,7 @@
 ## 1.1.0
 
 - The City Planner is now its own mod, [City Planner](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/CityPlanner/), and Margin City is a city pack that uses it. Your mod manager installs City Planner for you when you update. Nothing changes in the city or your saves.
+- Installed by hand (no mod manager)? Delete `CityPlanner.dll` from your `BepInEx\plugins\MarginCity` folder, then install City Planner into its own folder.
 
 ## 1.0.4
 

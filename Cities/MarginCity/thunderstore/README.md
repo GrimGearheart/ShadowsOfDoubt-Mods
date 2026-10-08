@@ -44,6 +44,7 @@ Keep this mod and City Planner installed while you play Margin City. The city is
 - Launch the game from Steam once. **The first launch takes a few minutes** while BepInEx sets itself up (a console window fills with text). Quit once you reach the main menu.
 
 **2. Install City Planner and Margin City.**
+- **Updating from Margin City 1.0.x?** Delete `CityPlanner.dll` from your `BepInEx\plugins\MarginCity` folder first. City Planner is now its own mod.
 - Download [City Planner](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/CityPlanner/) with *Manual Download*, create the folder `BepInEx\plugins\CityPlanner` in the game folder and copy **everything in its zip** into it.
 - Download this mod with *Manual Download*, create the folder `BepInEx\plugins\MarginCity` and copy **everything in the zip** into it, including the `Cities` folder.
 
