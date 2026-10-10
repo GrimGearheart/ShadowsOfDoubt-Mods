@@ -5,6 +5,6 @@
   "description": "A hand-planned city: rich north, poor south, the Ledger at its centre. Downtown towers, the Commons, Chinatown, a Red Light strip, the Bricks and the Stacks, every street and district laid out on purpose.",
   "dependencies": [
     "BepInEx-BepInExPack_IL2CPP-6.0.755",
-    "The_Protectorate-CityPlanner-1.1.0"
+    "The_Protectorate-CityPlanner-1.1.1"
   ]
 }
