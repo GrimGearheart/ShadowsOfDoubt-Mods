@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- **Fixed saves that wouldn't load** (stuck on "Creating interiors" or "Loading game state") in cities planned with some tiles left on *game decides*. Placed buildings were numbered ahead of the rest, so on load an address could lose its number and every citizen who liked that place broke the load. Cities you already generated load again with this update; new cities are numbered the way the game expects.
+- Planned city sizes are set up as soon as the game starts, not only after opening New Game.
+
 ## 1.1.0
 
 - City Planner is now its own mod. It used to ship inside Margin City; Margin City is now a city pack that uses it.

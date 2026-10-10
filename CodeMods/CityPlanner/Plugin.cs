@@ -17,7 +17,7 @@ namespace CityPlanner;
 /// population, districts (type, name, wealth) and the building on every tile. Pick "Planned city" in the
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.1.0")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.1.1")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -373,7 +373,7 @@ internal static class BuildingsPatch
 [HarmonyPatch(typeof(CityConstructor), "Update")]
 internal static class StagePatch
 {
-    internal static bool DistrictsDone, BuildingsDone, AlleysDone;
+    internal static bool DistrictsDone, BuildingsDone, SortDone, AlleysDone;
 
     private static void Prefix(CityConstructor __instance)
     {
@@ -387,6 +387,12 @@ internal static class StagePatch
         {
             BuildingsDone = true;
             BuildingsPatch.Run();
+        }
+        else if (__instance.loadState == CityConstructor.LoadState.generatePathfinding && !SortDone)
+        {
+            // All buildings exist now (planned and game-picked); addresses are numbered from the blueprints stage on.
+            SortDone = true;
+            AddressIds.SortBuildings();
         }
         else if (__instance.loadState == CityConstructor.LoadState.generateBlueprints && !AlleysDone)
         {
@@ -717,7 +723,7 @@ internal static class GenerateTimer
 
     private static void Prefix()
     {
-        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.AlleysDone = false;
+        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = false;
         AddressWealthPatch.Count = 0;
         StreetThemes.Restore();
         StreetThemes.Refused = 0;

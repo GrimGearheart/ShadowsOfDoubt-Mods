@@ -1,6 +1,6 @@
 {
   "name": "CityPlanner",
-  "version_number": "1.1.0",
+  "version_number": "1.1.1",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/CityPlanner",
   "description": "Design your own city in a planner that sends it straight to the game. Paint districts and let the game fill in the rest, or choose every building, facing and street yourself. Also loads city packs like Margin City.",
   "dependencies": [
