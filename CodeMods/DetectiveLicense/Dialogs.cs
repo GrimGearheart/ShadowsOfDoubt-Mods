@@ -35,6 +35,14 @@ internal static class Dialogs
             })
             .AddResponse("All in order. Welcome to the profession, Detective.", isSuccesful: true)
             .CreateAndRegister();
+
+        Lib.Dialogs.Builder("DetectiveLicense_Records")
+            .SetText("I need to check the public records.")
+            .SetDialogLogic(new RecordsLogic())
+            .ModifyDialogOptions(p => p.ranking = 4)
+            .AddResponse("Use the terminal at the desk, my login's fine. Printouts are charged per page.", isSuccesful: true)
+            .AddResponse("Records access is for licensed investigators only. You can apply for a license here.", isSuccesful: false)
+            .CreateAndRegister();
     }
 
     /// <summary>City Hall staff who are currently at work (optionally limited to certain jobs).</summary>
@@ -76,6 +84,32 @@ internal static class Dialogs
             Lib.GameMessage.Broadcast($"Crime scene permit: {count} location{(count == 1 ? "" : "s")}, {hours:0.#} hours",
                 icon: InterfaceControls.Icon.key, color: InterfaceControls.Instance.messageGreen);
             Plugin.Logger.LogInfo($"Permit issued for {count} case location(s), {hours} hours");
+        }
+    }
+
+    /// <summary>Licensed: the clerk hands over a desk login. Unlicensed: refused, which points at the license.</summary>
+    private sealed class RecordsLogic : IDialogLogic
+    {
+        public bool IsDialogShown(DialogPreset preset, Citizen saysTo, SideJob jobRef) => IsCityHallDesk(saysTo);
+
+        public DialogController.ForceSuccess ShouldDialogSucceedOverride(DialogController instance,
+            EvidenceWitness.DialogOption dialog, Citizen saysTo, NewNode where, Actor saidBy)
+            => Plugin.Licensed ? DialogController.ForceSuccess.success : DialogController.ForceSuccess.fail;
+
+        public void OnDialogExecute(DialogController instance, Citizen saysTo, Interactable saysToInteractable,
+            NewNode where, Actor saidBy, bool success, NewRoom roomRef, SideJob jobRef)
+        {
+            if (!success) return;
+            var login = Records.DeskLogin(saysTo);
+            if (login == null)
+            {
+                Plugin.Logger.LogWarning("Records: no lobby desk login found");
+                return;
+            }
+            GameplayController.Instance.AddPasscode(login.passcode, false);
+            Lib.GameMessage.Broadcast($"Public records: log in at a lobby desk as {login.GetInitialledName()} ({Plugin.PrintCost.Value} crows per printout)",
+                icon: InterfaceControls.Icon.key, color: InterfaceControls.Instance.messageGreen);
+            Plugin.Logger.LogInfo($"Records login given: {login.GetCitizenName()} (asked {saysTo.GetCitizenName()})");
         }
     }
 

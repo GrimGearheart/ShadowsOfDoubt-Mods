@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>DetectiveLicense</AssemblyName>
     <RootNamespace>DetectiveLicense</RootNamespace>
-    <Version>1.1.2</Version>
+    <Version>1.2.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -21,12 +21,14 @@
     <Reference Include="$(BepInExDir)\interop\Assembly-CSharp.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Il2Cppmscorlib.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\interop\FMODUnity.dll" Private="false" />
     <Reference Include="$(BepInExDir)\plugins\Venomaus-SODCommon\SOD.Common.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.UI.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Unity.TextMeshPro.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.UIModule.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Il2CppSystem.Core.dll" Private="false" />
     <Compile Include="..\Shared\CredentialsCard.cs" Link="Shared\CredentialsCard.cs" />
+    <Compile Include="..\Shared\DialogGuard.cs" Link="Shared\DialogGuard.cs" />
   </ItemGroup>
 
   <Target Name="DeployToPlugins" AfterTargets="Build">

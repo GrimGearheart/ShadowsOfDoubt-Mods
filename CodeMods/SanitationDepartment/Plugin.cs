@@ -18,7 +18,7 @@ namespace SanitationDepartment;
 /// - Route Supervisor (offered after binning 100 items): a subtle glow on nearby visible trash.
 /// - Crime scene cleanup certification: case-free death scenes, released by the Enforcers for cleaning.
 /// </summary>
-[BepInPlugin(Guid, "Sanitation Department", "1.1.2")]
+[BepInPlugin(Guid, "Sanitation Department", "1.1.3")]
 [BepInDependency("Venomaus.SOD.Common")]
 public class Plugin : BasePlugin
 {
@@ -139,6 +139,7 @@ public class Plugin : BasePlugin
         };
 
         Dialogs.Register();
+        ProtectorateShared.DialogGuard.Protect();
         new Harmony(Guid).PatchAll(typeof(Plugin).Assembly);
         Log.LogInfo("Sanitation Department loaded");
     }

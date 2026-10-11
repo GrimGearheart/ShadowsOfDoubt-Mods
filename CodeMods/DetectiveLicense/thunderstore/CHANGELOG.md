@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- New: **public records** for license holders. Ask a City Hall clerk to check the public records and they'll give you their computer login; the lobby computers then have the citizen database (the same one as the Enforcer offices). Each printout costs 50 crows (`Records.PrintCost`). Without a license the clerk turns you away.
+- Fixed: mod conversation options (from this mod and Sanitation Department) could all disappear after loading a second save without restarting the game.
+
 ## 1.1.2
 
 - Added a note that the mod is made with the help of AI. No changes to the mod itself.

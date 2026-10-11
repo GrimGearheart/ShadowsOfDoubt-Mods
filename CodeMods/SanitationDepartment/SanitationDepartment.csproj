@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>SanitationDepartment</AssemblyName>
     <RootNamespace>SanitationDepartment</RootNamespace>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -30,6 +30,7 @@
     <Reference Include="$(BepInExDir)\interop\UnityEngine.UI.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.UIModule.dll" Private="false" />
     <Compile Include="..\Shared\CredentialsCard.cs" Link="Shared\CredentialsCard.cs" />
+    <Compile Include="..\Shared\DialogGuard.cs" Link="Shared\DialogGuard.cs" />
   </ItemGroup>
 
   <Target Name="DeployToPlugins" AfterTargets="Build">

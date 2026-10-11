@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+- Fixed: City Hall options from this mod (and Detective License) could all disappear after loading a second save without restarting the game.
+
 ## 1.1.2
 
 - Added a note that the mod is made with the help of AI. No changes to the mod itself.

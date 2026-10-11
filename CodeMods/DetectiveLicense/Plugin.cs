@@ -16,8 +16,10 @@ namespace DetectiveLicense;
 /// - Crime Scene Permit: guest passes (the game's own mechanic) for every active crime scene, for a few hours.
 /// - Private Investigator License: permanent crime-scene access plus better odds when asking
 ///   "Can I come in and take a look around?", scaled by the resident's attitude to authority.
+/// - Public records (license holders): the City Hall clerks' computers get the citizen database, a clerk hands over
+///   their login, and each printout costs a fee.
 /// </summary>
-[BepInPlugin(Guid, "Detective License", "1.1.2")]
+[BepInPlugin(Guid, "Detective License", "1.2.0")]
 [BepInDependency("Venomaus.SOD.Common")]
 public class Plugin : BasePlugin
 {
@@ -32,6 +34,7 @@ public class Plugin : BasePlugin
     internal static ConfigEntry<float> TrustAuthorityBonus;
     internal static ConfigEntry<float> DistrustAuthorityBonus;
     internal static ConfigEntry<string> DeskJobs;
+    internal static ConfigEntry<int> PrintCost;
 
     /// <summary>Whether the player owns a PI license in the current save.</summary>
     internal static bool Licensed;
@@ -48,6 +51,8 @@ public class Plugin : BasePlugin
             "Extra chance on top of LookAroundBonus for residents who trust authority.");
         DistrustAuthorityBonus = Config.Bind("License", "DistrustAuthorityBonus", -0.25f,
             "Change on top of LookAroundBonus for residents who distrust authority (negative = the license helps less).");
+        PrintCost = Config.Bind("Records", "PrintCost", 50,
+            "Price of each citizen file printed at the City Hall lobby computers (license holders only), in crows.");
         DeskJobs = Config.Bind("CityHall", "DeskJobs", "",
             "Comma-separated job names at City Hall who sell permits and licenses (e.g. Receptionist). Empty = any City Hall employee at work.");
 
@@ -60,6 +65,7 @@ public class Plugin : BasePlugin
         Lib.SaveGame.OnBeforeNewGame += (_, _) => Licensed = false;
 
         Dialogs.Register();
+        ProtectorateShared.DialogGuard.Protect();
         new Harmony(Guid).PatchAll(typeof(Plugin).Assembly);
         Log.LogInfo("Detective License loaded");
     }

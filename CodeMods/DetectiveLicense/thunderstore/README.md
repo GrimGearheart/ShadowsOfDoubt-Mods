@@ -1,6 +1,6 @@
 # Detective License
 
-You're a detective. Now you can have the paperwork to prove it. Visit **City Hall** and talk to the staff on shift to buy one of two documents.
+You're a detective. Now you can have the paperwork to prove it. Visit **City Hall** and talk to the staff on shift to buy one of two documents. Licensed investigators can also use the public records.
 
 ## Crime Scene Permit — 100 crows
 
@@ -12,7 +12,16 @@ You're a detective. Now you can have the paperwork to prove it. Visit **City Hal
 
 - **Permanent** access to every open murder case (murder site and victim's home), for as long as each case stays open.
 - **Residents are more likely to let you in.** "Can I come in and take a look around?" gets a +30% bonus, more with people who trust authority and less with people who distrust it.
-- Saved with each save file. Once you own it, the City Hall options disappear.
+- **Public records access** (see below).
+- Saved with each save file. Once you own it, the permit and license options disappear from City Hall.
+
+## Public records — license holders only
+
+Ask a City Hall clerk **"I need to check the public records."** They'll give you their computer login, and the clerks' computers in the City Hall lobby get the **citizen database**: the same search-and-print program as the Enforcer offices, and the same citizen file you'd otherwise have to break in for.
+
+- Each printout costs **50 crows**, charged when it prints. If you can't pay, the computer beeps and nothing prints.
+- Without a license the clerk turns you away, and nothing changes at the lobby computers.
+- The Enforcer offices and hospital wards work exactly as before.
 
 ## Credentials card
 
@@ -38,11 +47,12 @@ After the first launch, edit `BepInEx/config/sodmods.detectivelicense.cfg` (or u
 | `License.LookAroundBonus` | 0.3 | Bonus chance to be let in (0.3 = +30%) |
 | `License.TrustAuthorityBonus` | 0.2 | Extra bonus with residents who trust authority |
 | `License.DistrustAuthorityBonus` | -0.25 | Change with residents who distrust authority |
+| `Records.PrintCost` | 50 | Price of each citizen file printed at the City Hall lobby computers |
 | `CityHall.DeskJobs` | (empty) | Limit sales to certain City Hall jobs (e.g. `Receptionist`); empty = any City Hall staff on shift |
 
 ## Safe to remove?
 
-**Yes.** Your license and permits are kept in a small file next to each save, not in the save itself. Without the mod your saves load normally; the license and permits just stop applying (money already spent isn't refunded).
+**Yes.** Your license and permits are kept in a small file next to each save, not in the save itself. Without the mod your saves load normally; the license and permits just stop applying (money already spent isn't refunded). Citizen files you've already printed stay in your inventory as ordinary game items.
 
 ## Compatibility
 
