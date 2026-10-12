@@ -113,7 +113,7 @@ Rather not have it at all? Set `Planner / Link` to `false`. The game then opens 
 
 ## Safe to remove?
 
-**Not for planned cities with a custom size.** A city made at a size the game doesn't have (such as 9 × 10) needs City Planner to load, and so does any city pack built that way, including Margin City. Saves in normal-sized cities aren't affected and load without it.
+**Yes, for playing.** Cities you generated and their saves load without City Planner, including Margin City. You only need it to generate a planned city. One exception: cities made with City Planner 1.1.0 that mixed placed buildings with *game decides* tiles need City Planner 1.1.1 or later to load.
 
 ## Compatibility
 
