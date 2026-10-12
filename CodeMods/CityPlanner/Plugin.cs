@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.1")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.2")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
