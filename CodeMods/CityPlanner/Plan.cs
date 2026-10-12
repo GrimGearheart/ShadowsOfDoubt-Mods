@@ -34,6 +34,8 @@ internal class PlannedTile
     public string Building;
     /// <summary>Which way the building faces (its front), or null to let the game choose.</summary>
     public NewBuilding.Direction? Facing;
+    /// <summary>Businesses wanted in the building's units (game AddressPreset names), from the [Businesses] section.</summary>
+    public readonly List<string> Businesses = new();
 }
 
 /// <summary>The city plan, read from BepInEx/config/cityplan.txt (see that file for the format).</summary>
@@ -68,6 +70,7 @@ internal class Plan
         var codes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var rows = new List<string[]>();
         var streetLines = new List<string>();
+        var businessLines = new List<string>();
         var section = "";
         foreach (var raw in lines)
         {
@@ -121,6 +124,9 @@ internal class Plan
                     break;
                 case "streets":
                     streetLines.Add(line);
+                    break;
+                case "businesses":
+                    businessLines.Add(line);
                     break;
             }
         }
@@ -193,7 +199,68 @@ internal class Plan
                 return null;
             }
         }
+        foreach (var line in businessLines)
+        {
+            if (!plan.ParseBusinessLine(line, out error))
+            {
+                error = $"[Businesses] '{line}': {error}";
+                return null;
+            }
+        }
         return plan;
+    }
+
+    /// <summary>The businesses a plan can ask for, by the names players write; values are the game's preset names.</summary>
+    private static readonly Dictionary<string, string> BusinessNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Eatery units
+        ["Bar"] = "Bar", ["FastFood"] = "FastFood", ["ChineseEatery"] = "ChineseEatery", ["Chinese"] = "ChineseEatery",
+        ["AsianRestaurant"] = "ChineseEatery", ["Restaurant"] = "ChineseEatery",
+        // Retail units
+        ["Chemist"] = "Chemist", ["Pharmacy"] = "Chemist", ["Launderette"] = "Launderette", ["Laundry"] = "Launderette",
+        ["HardwareStore"] = "HardwareStore", ["Hardware"] = "HardwareStore", ["PawnShop"] = "PawnShop", ["Pawn"] = "PawnShop",
+        ["Supermarket"] = "Supermarket", ["SyncClinic"] = "SyncClinic",
+        // Dens (basements and back rooms)
+        ["GamblingDen"] = "GamblingDen", ["LoanShark"] = "LoanShark", ["BlackmarketTrader"] = "BlackmarketTrader",
+        ["BlackMarket"] = "BlackmarketTrader", ["BlackmarketSyncClinic"] = "BlackmarketSyncClinic",
+        ["WeaponsDealer"] = "WeaponsDealer", ["Slum"] = "Slum", ["Squat"] = "Slum", ["EmptyDen"] = "EmptyDen", ["Empty"] = "EmptyDen",
+    };
+
+    /// <summary>
+    /// A [Businesses] line: one tile (row and column from 1 at the top left) = the businesses wanted in its building,
+    /// e.g. "R5 C1 = Bar, Chemist, GamblingDen". Each goes into a free unit of its kind; units not named are left to the game.
+    /// </summary>
+    private bool ParseBusinessLine(string line, out string error)
+    {
+        error = null;
+        var (selector, value) = KeyValue(line);
+        int row = 0, col = 0;
+        foreach (var token in selector.Split(new[] { ' ', '	' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var t = token.ToUpperInvariant();
+            if (t.StartsWith("R") && int.TryParse(t[1..], out var r)) row = r;
+            else if (t.StartsWith("C") && int.TryParse(t[1..], out var c)) col = c;
+            else
+            {
+                error = $"don't understand '{token}' (use R<row> C<column>)";
+                return false;
+            }
+        }
+        if (row < 1 || row > Height - 2 || col < 1 || col > Width - 2)
+        {
+            error = $"needs a tile inside the map (R1-R{Height - 2} C1-C{Width - 2})";
+            return false;
+        }
+        var tile = Tiles[(col, Height - 1 - row)];
+        tile.Businesses.Clear();
+        foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var name = part.Trim();
+            if (name.Length == 0) continue;
+            // Unlisted names are passed on as preset names, so a business added by a game update still works.
+            tile.Businesses.Add(BusinessNames.TryGetValue(name.Replace(" ", ""), out var preset) ? preset : name);
+        }
+        return true;
     }
 
     /// <summary>

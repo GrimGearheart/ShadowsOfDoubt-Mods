@@ -137,6 +137,16 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .cell .front.S { bottom: 3px; left: 24%; right: 24%; height: 4px; }
 .cell .front.E { right: 3px; top: 24%; bottom: 24%; width: 4px; }
 .cell .front.W { left: 3px; top: 24%; bottom: 24%; width: 4px; }
+.cell .bz { position: absolute; bottom: 3px; right: 4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: rgba(0, 0, 0, .45); font: 600 10px/15px var(--mono); }
+.bz-list { display: grid; gap: 12px; }
+.bzgroup { display: grid; gap: 5px; }
+.bzhead { font-size: 13px; }
+.bzhead span { display: block; font-size: 11px; color: var(--muted); }
+.bzrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.bzrow select, .bzgroup > select { width: 100%; min-width: 0; font-size: 13px; padding: 3px 4px; }
+.bzrow button { padding: 2px 9px; }
+.bzmaybe { font: 10px var(--mono); color: var(--warn); }
+.pop .hint.bzleft { font: 11px var(--body); text-transform: none; letter-spacing: 0; margin: 0; }
 .cell.bad { box-shadow: inset 0 0 0 3px var(--bad); }
 .cell.sel { box-shadow: 0 0 0 3px var(--accent); }
 .legend { display: grid; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--muted); }
@@ -238,7 +248,7 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
     </div>
     <span class="spacer"></span>
     <button id="btnUndo" type="button" title="Undo (Ctrl+Z)" disabled>Undo</button>
-    <span id="modeHint" class="hint">Click a tile to choose its building, district and front. Right-click a tile to let the game decide.</span>
+    <span id="modeHint" class="hint">Click a tile to choose its building, district, front and the businesses inside. Right-click a tile to let the game decide.</span>
   </div>
 
   <div class="main">
@@ -248,7 +258,7 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
       <div class="gridscroll"><div id="grid" class="grid"></div></div>
       <div class="legend">
         <span>Blue ring = the waterfront, built by the game around the blocks you plan.</span>
-        <span>Small number = floors. Bar on a tile edge = the building's front. ? = the game picks a building that suits the district.</span>
+        <span>Small number = floors. Bar on a tile edge = the building's front. Round badge = businesses you chose inside. ? = the game picks a building that suits the district.</span>
         <span>Strips between tiles are streets: <span class="swatchline sw-main"></span>main road <span class="swatchline sw-back"></span>back street <span class="swatchline sw-alley"></span>alley. Blank = the game decides by foot traffic.</span>
       </div>
     </section>
@@ -321,6 +331,39 @@ const B = {
   CP: { short: "Chem plant", preset: "ChemicalPlant", name: "Chemical Plant", cat: "Industry", floors: 3, mod: 3, in: ["Industrial"], max: 3, min: 1, lv: [0,4], den: [0,3], homes: 0, jobs: 21, biz: 5 },
   PK: { short: "Park", preset: "Park", name: "Park", cat: "Green", floors: 1, mod: 3, in: ["CBD", "Residential"], max: 10, lv: [0,4], den: [0,3], homes: 0, jobs: 0, biz: 0 },
 };
+// Business units in each building, from the game's floor blueprints: [fewest, most] of each kind. One Fifth and
+// Netherland roll one of two street-level plans when the city is made, so some of their units exist in only one of them.
+const UNITS = {
+  ET: { eatery: [1, 1], retail: [2, 2], den: [5, 5] },
+  OF: { eatery: [1, 2], retail: [0, 1], den: [8, 8] },
+  BN: { eatery: [0, 1], retail: [1, 2], den: [8, 12] },
+  TS: { eatery: [1, 1], retail: [1, 1], den: [4, 4] },
+  TH: { den: [5, 5] },
+  SH: { den: [2, 2] },
+  MI: { eatery: [1, 1], den: [3, 3] },
+  HO: { den: [4, 4] },
+};
+const KINDS = { eatery: "Eatery", retail: "Shop", den: "Den" };
+const KIND_NOTE = { eatery: "street level", retail: "street level", den: "back rooms and basements" };
+// The game's address presets for those units. max = per city; need = the game always tries to make one, and why it matters.
+const BIZ = {
+  Bar:                   { kind: "eatery", name: "Bar", need: "a bar" },
+  FastFood:              { kind: "eatery", name: "Fast food" },
+  ChineseEatery:         { kind: "eatery", name: "Chinese restaurant" },
+  Chemist:               { kind: "retail", name: "Pharmacy", need: "a pharmacy" },
+  Launderette:           { kind: "retail", name: "Launderette", need: "a launderette" },
+  HardwareStore:         { kind: "retail", name: "Hardware store", max: 3 },
+  PawnShop:              { kind: "retail", name: "Pawn shop", max: 3, need: "a pawn shop (where you sell what you find)" },
+  Supermarket:           { kind: "retail", name: "Supermarket" },
+  SyncClinic:            { kind: "retail", name: "Sync clinic", need: "a sync clinic (where sync disks are installed)" },
+  GamblingDen:           { kind: "den", name: "Gambling den", max: 3 },
+  LoanShark:             { kind: "den", name: "Loan shark", max: 3 },
+  BlackmarketTrader:     { kind: "den", name: "Black market trader", max: 3 },
+  BlackmarketSyncClinic: { kind: "den", name: "Black market sync clinic", max: 3, need: "a black market sync clinic" },
+  WeaponsDealer:         { kind: "den", name: "Weapons dealer", max: 4, need: "a weapons dealer" },
+  Slum:                  { kind: "den", name: "Squat (someone lives there)" },
+  EmptyDen:              { kind: "den", name: "Empty" },
+};
 const CATS = ["Civic", "Towers", "Homes", "Commerce", "Industry", "Green"];
 const PEOPLE_PER_HOME = 1.81; // citizens per home at population 1.0 (1,296 citizens in 952 homes at 0.75)
 const COLOURS = ["#c2483d", "#d9a43a", "#7d55c7", "#8a7560", "#5f6b75", "#cf5aa0", "#3f7fd6", "#3a9a7a", "#b8662f", "#4b8f9e", "#9c4f6b", "#6c8c3a"];
@@ -360,7 +403,7 @@ const $ = id => document.getElementById(id);
 
 function parsePlan(text) {
   const out = { w: 0, h: 0, pop: 1, districts: [], cells: [], streets: {} };
-  const streetLines = [];
+  const streetLines = [], bizLines = [];
   const codes = {};
   let section = "";
   for (const raw of text.split(/\r?\n/)) {
@@ -386,6 +429,8 @@ function parsePlan(text) {
       codes[line.slice(kv + 1).trim().toLowerCase()] = line.slice(0, kv).trim();
     } else if (section === "streets") {
       streetLines.push(line);
+    } else if (section === "businesses") {
+      bizLines.push(line);
     } else if (section === "map") {
       out.cells.push(line.split(/\s+/).map(cell => {
         const [d, rest] = cell.split(":");
@@ -402,6 +447,7 @@ function parsePlan(text) {
   if (out.cells.length !== out.h - 2) throw new Error(`The map has ${out.cells.length} rows; a ${out.w}x${out.h} city needs ${out.h - 2}.`);
   out.cells.forEach((r, i) => { if (r.length !== out.w - 2) throw new Error(`Map row ${i + 1} has ${r.length} cells; it needs ${out.w - 2}.`); });
   for (const line of streetLines) parseStreetLine(line, out);
+  for (const line of bizLines) parseBizLine(line, out);
   return out;
 }
 
@@ -426,6 +472,30 @@ function parseStreetLine(line, out) {
       : side === "INSIDE" ? [r < rows[1] && "S", c < cols[1] && "E"] : [side];
     for (const sd of sides) if (sd) out.streets[SIDE_KEY[sd](r, c)] = kind;
   }
+}
+
+// "R5 C1 = Bar, Chemist, GamblingDen": the businesses wanted in that tile's building (same names as City Planner).
+const BIZ_ALIAS = { pharmacy: "Chemist", chinese: "ChineseEatery", asianrestaurant: "ChineseEatery", hardware: "HardwareStore",
+  pawn: "PawnShop", blackmarket: "BlackmarketTrader", squat: "Slum", empty: "EmptyDen", laundry: "Launderette" };
+function parseBizLine(line, out) {
+  const kv = line.indexOf("="), m = kv > 0 && line.slice(0, kv).trim().toUpperCase().match(/^R(\d+)\s+C(\d+)$/);
+  if (!m) throw new Error("Business line needs 'R<row> C<column> = names': " + line);
+  const cell = out.cells[+m[1] - 1]?.[+m[2] - 1];
+  if (!cell) throw new Error("Business line is outside the map: " + line);
+  cell.biz = line.slice(kv + 1).split(",").map(n => n.trim().replace(/\s+/g, "")).filter(Boolean).map(n => {
+    const key = Object.keys(BIZ).find(k => k.toLowerCase() === n.toLowerCase()) || BIZ_ALIAS[n.toLowerCase()];
+    if (!key) throw new Error(`Unknown business "${n}" in: ${line}`);
+    return key;
+  });
+}
+
+// Keeps a tile's businesses to what its building has room for (after a building change or a load).
+function fitBiz(c) {
+  const u = UNITS[c.b];
+  if (!c.biz?.length || !u) { delete c.biz; return; }
+  const n = {};
+  c.biz = c.biz.filter(k => BIZ[k] && (n[BIZ[k].kind] = (n[BIZ[k].kind] || 0) + 1) <= (u[BIZ[k].kind]?.[1] || 0));
+  if (!c.biz.length) delete c.biz;
 }
 
 // Runs of same-type gaps along each boundary, so the plan stays short and readable.
@@ -468,6 +538,9 @@ function planText() {
   ];
   const sl = streetLines();
   if (sl.length) lines.push("", "# Streets between tiles: rows and columns from the top left, side N/E/S/W. Gaps not listed: the game decides.", "[Streets]", ...sl);
+  const bl = [];
+  state.cells.forEach((r, y) => r.forEach((c, x) => { if (c.biz?.length) bl.push(`R${y + 1} C${x + 1} = ${c.biz.join(", ")}`); }));
+  if (bl.length) lines.push("", "# Businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.", "[Businesses]", ...bl);
   return lines.join("\n") + "\n";
 }
 
@@ -532,6 +605,13 @@ function analyse() {
     (tiles[c.d] = tiles[c.d] || []).push([x, y]);
   }));
   const pop = Math.round(homes * PEOPLE_PER_HOME * state.pop);
+  // Businesses: city limits, and the ones the game always makes but can't if every unit of their kind is planned.
+  const bizCount = {}, openKind = { eatery: empty > 0, retail: empty > 0, den: empty > 0 };
+  state.cells.forEach(row => row.forEach(c => {
+    const u = UNITS[c.b], n = {};
+    for (const k of c.biz || []) { bizCount[k] = (bizCount[k] || 0) + 1; n[BIZ[k].kind] = (n[BIZ[k].kind] || 0) + 1; }
+    if (u) for (const kind of Object.keys(KINDS)) if ((n[kind] || 0) < (u[kind]?.[1] || 0)) openKind[kind] = true;
+  }));
 
   if (empty) issues.push(["okay", `${empty} tile${empty > 1 ? "s are" : " is"} left to the game, which picks buildings that suit each district.`]);
   const openIn = type => state.districts.some(d => d.type === type && open[d.key]);
@@ -547,6 +627,11 @@ function analyse() {
     // A required building can still come from the game if a district it's allowed in has tiles left open.
     if (b.min && n < b.min && !b.in.some(openIn))
       issues.push([code === "CH" ? "error" : "warning", code === "CH" ? "The city needs exactly one City Hall (it houses the Enforcers). Place one, or leave a Downtown (CBD) tile to the game." : `No ${b.name}. The game expects at least one; place one or leave an Industrial tile to the game.`]);
+  }
+  for (const [k, z] of Object.entries(BIZ)) {
+    const n = bizCount[k] || 0;
+    if (z.max && n > z.max) issues.push(["warning", `${n} × ${z.name}: the game allows ${z.max}, so ${n - z.max === 1 ? "one is" : n - z.max + " are"} left to the game.`]);
+    if (z.need && !n && !openKind[z.kind]) issues.push(["warning", `Every ${KINDS[z.kind].toLowerCase()} unit is planned and none is a ${z.name.toLowerCase()}, so the city won't have ${z.need}.`]);
   }
   for (const [type, t] of Object.entries(TYPES)) {
     const ds = state.districts.filter(d => d.type === type && tiles[d.key]);
@@ -570,7 +655,7 @@ function analyse() {
   if (pop > 1450) issues.push(["error", `About ${pop.toLocaleString()} residents. In testing, 1,555 stuttered badly; aim for about 1,300 or lower the population.`]);
   else if (pop > 1350) issues.push(["warning", `About ${pop.toLocaleString()} residents. Around 1,300 played well in testing; this may hitch more.`]);
   if (!issues.some(i => i[0] === "error")) issues.unshift(["okay", issues.some(i => i[0] === "warning") ? "Buildable. The warnings below are worth a look." : "Buildable. Every rule checks out."]);
-  return { issues, counts, bad, homes, jobs, biz, pop, empty };
+  return { issues, counts, bad, homes, jobs, biz, pop, empty, bizCount };
 }
 
 function connected(ts) {
@@ -589,6 +674,7 @@ function colName(x) { return String.fromCharCode(65 + x); }
 
 // ---------------------------------------------------------------- Rendering
 function render() {
+  state.cells.forEach(r => r.forEach(fitBiz));
   const a = analyse();
   const grid = $("grid");
   const avail = grid.parentElement.clientWidth || 600;
@@ -651,10 +737,11 @@ function render() {
     }
     else {
       el.style.background = dist ? dist.colour : "#777";
-      el.innerHTML = `<span class="code">${B[c.b].short}</span><span class="fl">${B[c.b].floors}F</span><span class="dk">${c.d}</span>` + (c.f ? `<span class="front ${c.f}"></span>` : "");
+      el.innerHTML = `<span class="code">${B[c.b].short}</span><span class="fl">${B[c.b].floors}F</span><span class="dk">${c.d}</span>` + (c.f ? `<span class="front ${c.f}"></span>` : "")
+        + (c.biz?.length ? `<span class="bz" aria-hidden="true">${c.biz.length}</span>` : "");
     }
-    el.setAttribute("aria-label", `${colName(x)}${y + 1}: ${c.b ? B[c.b].name : "building chosen by the game"}${dist ? ", " + dist.name : ""}${c.f ? ", front " + c.f : ""}`);
-    el.title = `${c.b ? B[c.b].name : "Game decides"}${dist ? " · " + dist.name : ""}${c.f ? " · front " + c.f : ""}`;
+    el.setAttribute("aria-label", `${colName(x)}${y + 1}: ${c.b ? B[c.b].name : "building chosen by the game"}${dist ? ", " + dist.name : ""}${c.f ? ", front " + c.f : ""}${c.biz?.length ? ", businesses: " + c.biz.map(k => BIZ[k].name).join(", ") : ""}`);
+    el.title = `${c.b ? B[c.b].name : "Game decides"}${dist ? " · " + dist.name : ""}${c.f ? " · front " + c.f : ""}${c.biz?.length ? "\n" + c.biz.map(k => BIZ[k].name).join(", ") : ""}`;
     if (a.bad.has(`${x},${y}`)) el.classList.add("bad");
     if (selected && selected.x === x && selected.y === y) el.classList.add("sel");
     grid.appendChild(el);
@@ -722,6 +809,7 @@ function openPop(x, y, anchor) {
     <div class="row" style="justify-content:space-between"><h3>Tile ${colName(x)}${y + 1}</h3><button type="button" data-close>Close</button></div>
     <div><div class="hint">District</div><div class="seg">${state.districts.map(d => `<button type="button" data-district="${d.key}" class="${d.key === c.d ? "on" : ""}" style="border-left:6px solid ${d.colour}">${d.name}</button>`).join("")}</div></div>
     <div><div class="hint">Front faces</div><div class="seg">${[["", "Game decides"], ["N", "North"], ["E", "East"], ["S", "South"], ["W", "West"]].map(([v, l]) => `<button type="button" data-face="${v}" class="${c.f === v ? "on" : ""}">${l}</button>`).join("")}</div></div>
+    ${bizSection(c, a)}
     <button type="button" class="opt ${c.b ? "" : "cur"}" data-gamepick><span class="c">?</span><span><span class="n">Game decides</span><span class="d">The game picks a building that suits the district</span></span><span></span></button>
     ${byCat}
     <div class="row" style="justify-content:flex-end"><button type="button" class="primary" data-close>Done</button></div>`;
@@ -733,6 +821,38 @@ function openPop(x, y, anchor) {
   pop.style.top = Math.max(60, Math.min(window.innerHeight - pop.offsetHeight - 8, r.top - 20)) + "px";
   render();
 }
+// The building's business units, by kind: one menu per business asked for, plus "Add" while there's room.
+function bizSection(c, a) {
+  const u = UNITS[c.b];
+  if (!u) return "";
+  const groups = Object.entries(KINDS).filter(([kind]) => u[kind]?.[1] > 0).map(([kind, label]) => {
+    const [lo, hi] = u[kind], picks = (c.biz || []).map((k, i) => [k, i]).filter(([k]) => BIZ[k].kind === kind);
+    const opts = cur => Object.entries(BIZ).filter(([, z]) => z.kind === kind).map(([k, z]) => {
+      const full = z.max && (a.bizCount[k] || 0) >= z.max && k !== cur;
+      return `<option value="${k}" ${k === cur ? "selected" : ""} ${full ? "disabled" : ""}>${z.name}${full ? ` (city has ${z.max})` : ""}</option>`;
+    }).join("");
+    const rows = picks.map(([k, i], j) => `<div class="bzrow"><select data-bizi="${i}" aria-label="${label} ${j + 1}">${opts(k)}</select>`
+      + (j >= lo ? `<span class="bzmaybe" title="Only some of this building's floor plans have this unit">if room</span>` : "<span></span>")
+      + `<button type="button" data-bizdel="${i}" aria-label="Remove ${BIZ[k].name}">×</button></div>`).join("");
+    const add = picks.length < hi ? `<select data-bizadd="${kind}" aria-label="Add ${label.toLowerCase()}"><option value="" selected>+ Add ${label.toLowerCase()}…</option>${opts("")}</select>` : "";
+    const left = hi - picks.length;
+    return `<div class="bzgroup"><div class="bzhead">${label} units: <b>${lo === hi ? hi : lo + "–" + hi}</b><span>${KIND_NOTE[kind]}${lo !== hi ? " · depends on the floor plan the game picks" : ""}</span></div>${rows}${add}`
+      + (left > 0 ? `<span class="hint bzleft">${picks.length ? (lo === hi ? left : "the rest") + " left to the game" : "all left to the game"}</span>` : "") + `</div>`;
+  }).join("");
+  return `<div><div class="hint">Businesses inside</div><div class="bz-list">${groups}</div></div>`;
+}
+
+$("pop").addEventListener("change", e => {
+  const t = e.target, pop = $("pop");
+  if (t.tagName !== "SELECT" || pop.dataset.x === undefined) return;
+  const c = state.cells[+pop.dataset.y][+pop.dataset.x];
+  if (t.dataset.bizi !== undefined) c.biz[+t.dataset.bizi] = t.value;
+  else if (t.dataset.bizadd && t.value) (c.biz = c.biz || []).push(t.value);
+  else return;
+  const anchor = document.querySelector(`.cell[data-x="${pop.dataset.x}"][data-y="${pop.dataset.y}"]`);
+  openPop(+pop.dataset.x, +pop.dataset.y, anchor);
+});
+
 function closePop() { const pop = $("pop"); pop.hidden = true; delete pop.dataset.x; delete pop.dataset.y; selected = null; render(); }
 
 $("pop").addEventListener("click", e => {
@@ -742,10 +862,11 @@ $("pop").addEventListener("click", e => {
   if (t.hasAttribute("data-close")) return closePop();
   selected = { x: +pop.dataset.x, y: +pop.dataset.y };
   const c = state.cells[selected.y][selected.x];
-  if (t.dataset.pick) { c.b = t.dataset.pick; closePop(); return; }
+  if (t.dataset.bizdel !== undefined) c.biz.splice(+t.dataset.bizdel, 1);
+  if (t.dataset.pick) { c.b = t.dataset.pick; fitBiz(c); closePop(); return; }
   if (t.dataset.district) c.d = t.dataset.district;
   if (t.dataset.face !== undefined) c.f = t.dataset.face;
-  if (t.hasAttribute("data-gamepick")) { c.b = ""; closePop(); return; }
+  if (t.hasAttribute("data-gamepick")) { c.b = ""; delete c.biz; closePop(); return; }
   const anchor = document.querySelector(`.cell[data-x="${selected.x}"][data-y="${selected.y}"]`);
   openPop(selected.x, selected.y, anchor);
 });
@@ -801,7 +922,7 @@ grid.addEventListener("contextmenu", e => {
   if (!el || paintMode) return;
   e.preventDefault();
   const c = state.cells[+el.dataset.y][+el.dataset.x];
-  if (c.b || c.f) { c.b = ""; c.f = ""; closePop(); }
+  if (c.b || c.f) { c.b = ""; c.f = ""; delete c.biz; closePop(); }
 });
 $("btnUndo").addEventListener("click", undo);
 document.addEventListener("keydown", e => {
@@ -825,7 +946,7 @@ function setMode(paint, streets = false) {
   $("modePick").setAttribute("aria-checked", !paintMode && !streetMode);
   $("modePaint").setAttribute("aria-checked", paintMode);
   $("modeHint").textContent = streetMode ? "Click or drag along the strips between tiles; a drag stays on one road. Right-click a strip to clear it. Buildings face the busiest street beside them unless you set a front."
-    : paintMode ? "Drag across tiles to paint them. Pick a colour in the Districts panel to change brush." : "Click a tile to choose its building, district and front. Right-click a tile to let the game decide.";
+    : paintMode ? "Drag across tiles to paint them. Pick a colour in the Districts panel to change brush." : "Click a tile to choose its building, district, front and the businesses inside. Right-click a tile to let the game decide.";
   render();
 }
 $("modePick").addEventListener("click", () => setMode(false));
@@ -881,7 +1002,7 @@ function resize(w, h) {
   const cells = [];
   for (let y = 0; y < h - 2; y++) {
     const row = [];
-    for (let x = 0; x < w - 2; x++) row.push(state.cells[y]?.[x] ? { ...state.cells[y][x] } : { d: fallback, b: "", f: "" });
+    for (let x = 0; x < w - 2; x++) row.push(state.cells[y]?.[x] ? structuredClone(state.cells[y][x]) : { d: fallback, b: "", f: "" });
     cells.push(row);
   }
   state.w = w; state.h = h; state.cells = cells;
@@ -986,7 +1107,7 @@ function change(text, fn) {
 }
 function blankDistrict() { return blankState().districts[0]; }
 $("btnClearB").addEventListener("click", () => change("Buildings cleared: the game picks them all. Districts and streets kept.",
-  () => state.cells.forEach(r => r.forEach(c => { c.b = ""; c.f = ""; }))));
+  () => state.cells.forEach(r => r.forEach(c => { c.b = ""; c.f = ""; delete c.biz; }))));
 $("btnClearD").addEventListener("click", () => change("Districts cleared: every tile is in one new district. Buildings that don't fit it are marked.", () => {
   state.districts = [blankDistrict()];
   state.cells.forEach(r => r.forEach(c => { c.d = "A"; }));

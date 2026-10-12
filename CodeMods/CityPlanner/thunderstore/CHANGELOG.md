@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- **Choose the businesses in a building:** click a tile to pick what goes in each of its shop units, such as a bar, pharmacy, launderette, pawn shop or sync clinic at street level, or a gambling den, loan shark or weapons dealer in the back rooms. Units you leave alone are filled by the game as before. In the plan file this is a `[Businesses]` section.
+- The planner warns when a plan asks for more of a business than the game allows, or fills every unit without one the city needs, such as a sync clinic.
+
 ## 1.1.1
 
 - **Fixed saves that wouldn't load** (stuck on "Creating interiors" or "Loading game state") in cities planned with some tiles left on *game decides*. Placed buildings were numbered ahead of the rest, so on load an address could lose its number and every citizen who liked that place broke the load. Cities you already generated load again with this update; new cities are numbered the way the game expects.

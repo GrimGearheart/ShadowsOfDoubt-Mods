@@ -16,8 +16,9 @@ namespace CityPlanner;
 /// City Planner: generates a hand-planned city. The plan (BepInEx/config/cityplan.txt) sets the city size,
 /// population, districts (type, name, wealth) and the building on every tile. Pick "Planned city" in the
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
+/// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.1.1")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -98,7 +99,8 @@ public class Plugin : BasePlugin
         Sizes.Remember(plan.Width, plan.Height);
         Sizes.RefreshDropdown();
         Logger.LogInfo($"City plan {how}: {plan.Width}x{plan.Height}, {plan.Districts.Count} districts, population x{plan.Population}" +
-                       (plan.Streets.Count > 0 ? $", {plan.Streets.Count} painted streets" : ""));
+                       (plan.Streets.Count > 0 ? $", {plan.Streets.Count} painted streets" : "") +
+                       (plan.Tiles.Values.Any(t => t.Businesses.Count > 0) ? $", {plan.Tiles.Values.Sum(t => t.Businesses.Count)} planned businesses" : ""));
     }
 
     /// <summary>Called after the planner page wrote cityplan.txt, so the file watcher doesn't read it again.</summary>
@@ -373,7 +375,7 @@ internal static class BuildingsPatch
 [HarmonyPatch(typeof(CityConstructor), "Update")]
 internal static class StagePatch
 {
-    internal static bool DistrictsDone, BuildingsDone, SortDone, AlleysDone;
+    internal static bool DistrictsDone, BuildingsDone, SortDone, AlleysDone, BusinessesDone;
 
     private static void Prefix(CityConstructor __instance)
     {
@@ -398,6 +400,12 @@ internal static class StagePatch
         {
             AlleysDone = true;
             OpenAlleys.Run();
+        }
+        else if (__instance.loadState == CityConstructor.LoadState.generateCompanies && !BusinessesDone)
+        {
+            // Every unit exists now; the game is about to choose what each one becomes.
+            BusinessesDone = true;
+            Businesses.Run();
         }
         else if (__instance.loadState == CityConstructor.LoadState.generateInteriors && !StreetThemes.Prepared)
         {
@@ -723,7 +731,8 @@ internal static class GenerateTimer
 
     private static void Prefix()
     {
-        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = false;
+        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = StagePatch.BusinessesDone = false;
+        Businesses.Planned.Clear();
         AddressWealthPatch.Count = 0;
         StreetThemes.Restore();
         StreetThemes.Refused = 0;

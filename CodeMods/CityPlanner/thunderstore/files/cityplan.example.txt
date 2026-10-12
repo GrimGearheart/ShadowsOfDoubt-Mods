@@ -53,3 +53,10 @@ S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP
 # R3 C1-C7 S = main
 # R5-R7 C1-C3 edge = main
 # R5-R7 C1-C3 inside = back
+
+# Optional: the businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.
+# Eatery units: Bar, Fast Food, Chinese Eatery. Shop units: Pharmacy, Launderette, Hardware Store, Pawn Shop,
+# Supermarket, Sync Clinic. Dens: Gambling Den, Loan Shark, Black Market, Blackmarket Sync Clinic, Weapons Dealer,
+# Squat, Empty. Margin City itself was generated without planned businesses.
+# [Businesses]
+# R5 C1 = Bar, Pharmacy, Gambling Den

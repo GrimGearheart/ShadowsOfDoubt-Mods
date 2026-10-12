@@ -5,7 +5,7 @@ Design your own Shadows of Doubt city instead of rolling random seeds. You decid
 **Plan it loosely or exactly:**
 - **Quick:** paint the districts and leave everything else on *game decides*. The game picks buildings that suit each district and lays out the streets itself.
 - **In between:** place the landmarks you care about (City Hall, a hotel, a park belt) and let the game fill in the rest.
-- **Exact:** choose the building on every tile, which way each one faces, and which gaps between tiles are main roads, back streets or alleys.
+- **Exact:** choose the building on every tile, which way each one faces, the businesses inside it, and which gaps between tiles are main roads, back streets or alleys.
 
 City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/). It also installs city packs: any mod that ships city files gets them added to your city list.
 
@@ -15,6 +15,7 @@ City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-do
 - **Population:** fewer or more residents than the game would normally put in.
 - **Districts:** where each one is, its name, its type (Residential, CBD, Chinatown, Red Light, Industrial…), its wealth and its density.
 - **Buildings (optional):** which building goes on each tile, and which side its front faces. Tiles left on *game decides* get a building the game picks for that district.
+- **Businesses (optional):** choose what goes in a building's shop units: the bar on the corner, the pharmacy next door, the gambling den in the basement. Units you leave alone are filled by the game.
 - **Streets (optional):** paint any gap between two tiles as a main road, back street or alley. Gaps you leave alone are decided by the game.
 
 The plan also changes how wealth works in your city:
@@ -54,6 +55,37 @@ R5-R7 C1-C3 inside = back  # the lanes inside it
 ```
 
 The gaps can't be added, removed or narrowed: every road is as wide as the game makes it. Without a `[Streets]` section, the game lays out all streets itself.
+
+## Businesses
+
+Buildings with shop units show them when you click the tile: pick a business for any unit, or leave it to the game.
+
+| Unit | Businesses |
+|---|---|
+| **Eatery** (street level) | Bar, Fast food, Chinese restaurant |
+| **Shop** (street level) | Pharmacy, Launderette, Hardware store, Pawn shop, Supermarket, Sync clinic |
+| **Den** (back rooms and basements) | Gambling den, Loan shark, Black market trader, Black market sync clinic, Weapons dealer, Squat, Empty |
+
+| Building | Eateries | Shops | Dens |
+|---|---|---|---|
+| Commercial Tower | 1 | 2 | 5 |
+| Apartment Tower (One Fifth) | 1–2 | 0–1 | 8 |
+| Apartment Tower (Netherland) | 0–1 | 1–2 | 8–12 |
+| Town-house with shopfront | 1 | 1 | 4 |
+| Town-house | – | – | 5 |
+| Mixed Industrial | 1 | – | 3 |
+| Fathoms | – | – | 2 |
+| Hotel | – | – | 4 |
+
+The two apartment towers have two possible street-level layouts, and the game picks one for each tower. A business marked *if room* in the planner only appears if the tower gets the layout with that unit. The game allows at most 3 hardware stores, pawn shops, gambling dens, loan sharks, black market traders and black market sync clinics, and 4 weapons dealers. Extra ones are left to the game. If a business can't be placed, the unit is left to the game and `LogOutput.log` says why.
+
+In `cityplan.txt` the businesses are a `[Businesses]` section, one line per tile:
+
+```
+[Businesses]
+R5 C1 = Bar, Pharmacy, Gambling Den
+R3 C3 = Sync Clinic, Supermarket
+```
 
 ## Settings
 
