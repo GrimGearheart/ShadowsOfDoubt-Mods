@@ -278,11 +278,8 @@ public class PlannerPump : MonoBehaviour
     {
         // The extra city sizes must exist before any save is loaded, not only once New Game is opened: a save finds its
         // city by size slot, and without the slot it looks for a 5 x 5 city and reports missing city data.
-        if (Sizes.VanillaCount < 0 && CityControls.Instance != null && CityControls.Instance.citySizes != null)
-        {
-            Sizes.Ensure();
-            Plugin.Logger.LogInfo($"City sizes ready at startup ({CityControls.Instance.citySizes.Count} in the list)");
-        }
+        // Checked every frame: the game builds a new size list each time it returns to the main menu.
+        Sizes.Ensure();
         // A sent plan waits until no planned city is being built.
         UpdateGenerating();
         while (!PlannerLink.Generating && PlannerLink.TryDequeue(out var action))

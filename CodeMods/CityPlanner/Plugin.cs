@@ -158,19 +158,25 @@ public class Plugin : BasePlugin
 internal static class Sizes
 {
     internal static int VanillaCount = -1;
+    /// <summary>The size list the extra sizes were added to. Going back to the main menu builds a fresh one.</summary>
+    private static IntPtr sizedList;
 
     /// <summary>
     /// Adds the extra sizes. A city remembers its size as a slot in this list, so slots must never move: every
     /// planned size is kept in the config (Sizes.Keep), in the order it was first planned, and the list is built
-    /// from that.
+    /// from that. The game rebuilds the list when it returns to the main menu (loading another save, for one), so
+    /// the sizes are added again to each new list; without them the second load looked for a 5 x 5 city.
     /// </summary>
     public static void Ensure()
     {
         var list = CityControls.Instance?.citySizes;
-        if (list == null || VanillaCount >= 0) return;
-        // Into the config first (the live list isn't built yet), so the plan's size takes its fixed place below.
+        if (list == null || list.Pointer == sizedList) return;
+        // Into the config first (this list isn't marked as built yet, so Remember leaves it alone), so the plan's size
+        // takes its fixed place below.
         if (Plugin.Plan != null) Remember(Plugin.Plan.Width, Plugin.Plan.Height);
-        VanillaCount = list.Count;
+        sizedList = list.Pointer;
+        // Every new list is the game's own, so the extra sizes start at the same slot each time.
+        if (VanillaCount < 0) VanillaCount = list.Count;
         foreach (var entry in Plugin.KeepSizes.Value.Split(',', StringSplitOptions.RemoveEmptyEntries))
         {
             var p = entry.Trim().ToLowerInvariant().Split('x');
@@ -187,8 +193,9 @@ internal static class Sizes
             entries.Add($"{w}x{h}");
             Plugin.KeepSizes.Value = string.Join(",", entries);
         }
+        // Only onto a list that already has the earlier sizes in order (otherwise Ensure adds them all in order).
         var list = CityControls.Instance?.citySizes;
-        if (list != null && VanillaCount >= 0) Add(list, w, h);
+        if (list != null && list.Pointer == sizedList) Add(list, w, h);
     }
 
     /// <summary>The size list entry for a planned city. Players count the blocks they plan, not the waterfront ring.</summary>
