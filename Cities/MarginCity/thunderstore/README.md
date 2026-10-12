@@ -34,7 +34,7 @@ Behind the layout:
 2. Launch the game **from the mod manager** (*Start modded*). Margin City is copied into your cities.
 3. Start a **new game** and pick **Margin City** from the city list.
 
-Keep this mod and City Planner installed while you play Margin City. The city is a size the game doesn't offer by itself, so it needs City Planner to load.
+City Planner is what copies Margin City into your city list. Once it's there, Margin City plays and its saves load without any mods.
 
 ## Manual install (without a mod manager)
 
@@ -68,13 +68,13 @@ Margin City was built with [City Planner](https://thunderstore.io/c/shadows-of-d
 
 ## Safe to remove?
 
-**Not for Margin City saves.** Margin City is a city size the base game doesn't have, so saves made in it need this mod and City Planner to load. Keep both installed while you play Margin City. Saves in any other city aren't affected and load normally without them.
+**Yes.** Once Margin City is in your city list, new games and saves in it load without this mod or City Planner (the city file stays in your game's Cities folder). Keep City Planner if you want to plan cities of your own.
 
 ## Compatibility
 
 - Built for the main (IL2CPP) branch of the game.
 - Works alongside other mods, including The Protectorate's (Sanitation Department, Detective License and the rest).
-- Saves made in Margin City need this mod and City Planner to load.
+- Margin City and its saves load without any mods once the city is installed.
 
 ## Feedback
 
