@@ -77,7 +77,7 @@ Buildings with shop units show them when you click the tile: pick a business for
 | Fathoms | – | – | 2 |
 | Hotel | – | – | 4 |
 
-The two apartment towers have two possible street-level layouts, and the game picks one for each tower. A business marked *if room* in the planner only appears if the tower gets the layout with that unit. The game allows at most 3 hardware stores, pawn shops, gambling dens, loan sharks, black market traders and black market sync clinics, and 4 weapons dealers. Extra ones are left to the game. If a business can't be placed, the unit is left to the game and `LogOutput.log` says why.
+The two apartment towers each have two street-level layouts: One Fifth has 2 eateries, or an eatery and a shop; Netherland has an eatery and a shop, or 2 shops. City Planner gives each tower the layout that fits the businesses you picked, and the planner warns you about a mix neither layout holds. The game allows at most 3 hardware stores, pawn shops, gambling dens, loan sharks, black market traders and black market sync clinics, and 4 weapons dealers. Extra ones are left to the game. If a business can't be placed, the unit is left to the game and `LogOutput.log` says why.
 
 In `cityplan.txt` the businesses are a `[Businesses]` section, one line per tile:
 

@@ -154,4 +154,91 @@ internal static class Businesses
     {
         private static bool Prefix(NewAddress __instance) => assigning || Planned.Count == 0 || !Planned.Contains(__instance.Pointer);
     }
+
+    /// <summary>
+    /// Floor plans. Some buildings roll one of several plans per floor (a Netherland tower's street level has either an
+    /// eatery and a shop, or two shops), so a planned business could find no unit of its kind. While such a building's
+    /// floors are made (one building at a time, on the main thread), its floor settings only offer the plans that fit
+    /// the most planned businesses; the game's own roll then picks among those. Restored straight after.
+    /// </summary>
+    [HarmonyPatch(typeof(NewBuilding), nameof(NewBuilding.LoadInterior))]
+    private static class FloorPlanPatch
+    {
+        private static readonly List<(Il2CppSystem.Collections.Generic.List<TextAsset> List, TextAsset[] All)> narrowed = new();
+
+        private static void Prefix(NewBuilding __instance)
+        {
+            narrowed.Clear();
+            if (!Plugin.Active || __instance?.cityTile == null || __instance.preset == null) return;
+            var c = __instance.cityTile.cityCoord;
+            if (!Plugin.Plan.Tiles.TryGetValue((c.x, c.y), out var tile) || tile.Businesses.Count == 0) return;
+            try
+            {
+                var need = UnitsNeeded(tile);
+                if (need.Count == 0) return;
+                var changed = 0;
+                foreach (var settings in new[] { __instance.preset.floorLayouts, __instance.preset.basementLayouts })
+                {
+                    if (settings == null) continue;
+                    foreach (var setting in settings)
+                        if (setting?.blueprints != null && setting.blueprints.Count > 1 && Narrow(setting.blueprints, need)) changed++;
+                }
+                if (changed > 0)
+                    Plugin.Logger.LogInfo($"{__instance.preset.name} at tile R{Plugin.Plan.Height - 1 - c.y} C{c.x}: floor plans narrowed to fit its planned businesses ({changed} floor setting{(changed > 1 ? "s" : "")})");
+            }
+            catch (Exception e)
+            {
+                Plugin.Logger.LogError("Choosing floor plans for planned businesses failed: " + e);
+            }
+        }
+
+        private static void Finalizer()
+        {
+            foreach (var (list, all) in narrowed)
+            {
+                list.Clear();
+                foreach (var bp in all) list.Add(bp);
+            }
+            narrowed.Clear();
+        }
+
+        /// <summary>How many units of each layout (Eatery, Retail, Den...) the tile's planned businesses need.</summary>
+        private static Dictionary<string, int> UnitsNeeded(PlannedTile tile)
+        {
+            var need = new Dictionary<string, int>();
+            foreach (var name in tile.Businesses)
+            {
+                AddressPreset preset = null;
+                foreach (var p in Toolbox.Instance.allAddressPresets)
+                    if (p != null && string.Equals(p.name, name, StringComparison.OrdinalIgnoreCase)) { preset = p; break; }
+                var layout = preset?.compatible.Count > 0 ? preset.compatible[0] : null;
+                if (layout == null) continue;
+                need[layout.name] = need.TryGetValue(layout.name, out var n) ? n + 1 : 1;
+            }
+            return need;
+        }
+
+        /// <summary>Leaves only the plans that hold the most of the needed units. True if any plan was hidden.</summary>
+        private static bool Narrow(Il2CppSystem.Collections.Generic.List<TextAsset> blueprints, Dictionary<string, int> need)
+        {
+            var all = new TextAsset[blueprints.Count];
+            var scores = new int[all.Length];
+            for (var i = 0; i < all.Length; i++)
+            {
+                all[i] = blueprints[i];
+                if (all[i] == null || !CityData.Instance.floorData.TryGetValue(all[i].name, out var floor) || floor?.a_d == null) continue;
+                var have = new Dictionary<string, int>();
+                foreach (var unit in floor.a_d)
+                    if (unit?.p_n != null) have[unit.p_n] = have.TryGetValue(unit.p_n, out var n) ? n + 1 : 1;
+                foreach (var (layout, count) in need) scores[i] += Math.Min(count, have.TryGetValue(layout, out var h) ? h : 0);
+            }
+            var best = scores.Max();
+            if (scores.All(s => s == best)) return false;
+            narrowed.Add((blueprints, all));
+            blueprints.Clear();
+            for (var i = 0; i < all.Length; i++)
+                if (scores[i] == best) blueprints.Add(all[i]);
+            return true;
+        }
+    }
 }

@@ -2,6 +2,7 @@
 
 ## 1.2.1
 
+- **Towers get the layout your businesses need.** One Fifth and Netherland towers have two street-level layouts, and the game used to pick one at random, so a Netherland asked for Fast Food and a Launderette could roll the layout with two shops and no eatery. City Planner now picks the layout that fits, and the planner warns about a mix neither layout holds.
 - **Fixed loading a second save in one session** in custom-size cities (planned cities, Margin City): it froze on *Creating Blueprints*. Going back to the main menu rebuilt the game's list of city sizes without the extra ones, so the game looked for the city at 5 × 5. The extra sizes are now added back every time.
 - **Tighter planner link:** only the planner page the game opens can send plans to it now. Each game session makes a new secret code that's written into that page, and requests without it are refused. Before, a page opened from disk was also accepted, and a website could pretend to be one. A planner tab left open from an earlier session asks you to reopen it from the *City Planner* button; your plan is kept.
 - **New setting `Planner / Link`:** turn it off and the game opens no connection at all. The *City Planner* button then opens the page from disk, and you save plans with *Copy cityplan.txt*.

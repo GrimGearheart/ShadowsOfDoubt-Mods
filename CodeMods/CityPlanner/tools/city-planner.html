@@ -142,10 +142,10 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .bzgroup { display: grid; gap: 5px; }
 .bzhead { font-size: 13px; }
 .bzhead span { display: block; font-size: 11px; color: var(--muted); }
-.bzrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; }
+.bzrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
 .bzrow select, .bzgroup > select { width: 100%; min-width: 0; font-size: 13px; padding: 3px 4px; }
 .bzrow button { padding: 2px 9px; }
-.bzmaybe { font: 10px var(--mono); color: var(--warn); }
+.bzclash { margin: 0; font-size: 12px; color: var(--warn); border-left: 3px solid var(--warn); padding-left: 8px; }
 .pop .hint.bzleft { font: 11px var(--body); text-transform: none; letter-spacing: 0; margin: 0; }
 .cell.bad { box-shadow: inset 0 0 0 3px var(--bad); }
 .cell.sel { box-shadow: 0 0 0 3px var(--accent); }
@@ -332,11 +332,12 @@ const B = {
   PK: { short: "Park", preset: "Park", name: "Park", cat: "Green", floors: 1, mod: 3, in: ["CBD", "Residential"], max: 10, lv: [0,4], den: [0,3], homes: 0, jobs: 0, biz: 0 },
 };
 // Business units in each building, from the game's floor blueprints: [fewest, most] of each kind. One Fifth and
-// Netherland roll one of two street-level plans when the city is made, so some of their units exist in only one of them.
+// Netherland have two street-level plans (plans: the eateries and shops on each); City Planner gives a tower the plan
+// that fits the businesses asked for, so any mix one plan holds works.
 const UNITS = {
   ET: { eatery: [1, 1], retail: [2, 2], den: [5, 5] },
-  OF: { eatery: [1, 2], retail: [0, 1], den: [8, 8] },
-  BN: { eatery: [0, 1], retail: [1, 2], den: [8, 12] },
+  OF: { eatery: [1, 2], retail: [0, 1], den: [8, 8], plans: [{ eatery: 2, retail: 0 }, { eatery: 1, retail: 1 }] },
+  BN: { eatery: [0, 1], retail: [1, 2], den: [8, 12], plans: [{ eatery: 1, retail: 1 }, { eatery: 0, retail: 2 }] },
   TS: { eatery: [1, 1], retail: [1, 1], den: [4, 4] },
   TH: { den: [5, 5] },
   SH: { den: [2, 2] },
@@ -489,6 +490,17 @@ function parseBizLine(line, out) {
   });
 }
 
+// Does one of the building's street-level plans hold every eatery and shop asked for? (Null if it does.)
+function planClash(c) {
+  const plans = UNITS[c.b]?.plans;
+  if (!plans || !c.biz?.length) return null;
+  const n = { eatery: 0, retail: 0 };
+  for (const k of c.biz) if (BIZ[k].kind in n) n[BIZ[k].kind]++;
+  if (plans.some(p => p.eatery >= n.eatery && p.retail >= n.retail)) return null;
+  const say = p => [p.eatery && `${p.eatery} eater${p.eatery > 1 ? "ies" : "y"}`, p.retail && `${p.retail} shop${p.retail > 1 ? "s" : ""}`].filter(Boolean).join(" + ");
+  return `${B[c.b].name}'s street level has either ${plans.map(say).join(" or ")}, so not all of these fit; the extra is left to the game.`;
+}
+
 // Keeps a tile's businesses to what its building has room for (after a building change or a load).
 function fitBiz(c) {
   const u = UNITS[c.b];
@@ -620,6 +632,8 @@ function analyse() {
     const dist = districtOf(c.d);
     if (!dist) { issues.push(["error", `Tile ${colName(x)}${y + 1} uses district "${c.d}", which doesn't exist.`]); bad.add(`${x},${y}`); return; }
     if (!B[c.b].in.includes(dist.type)) { issues.push(["error", `${B[c.b].name} at ${colName(x)}${y + 1} isn't allowed in ${TYPES[dist.type].label} districts (${dist.name}).`]); bad.add(`${x},${y}`); }
+    const clash = planClash(c);
+    if (clash) issues.push(["warning", `Tile ${colName(x)}${y + 1}: ${clash}`]);
   }));
   for (const [code, b] of Object.entries(B)) {
     const n = counts[code] || 0;
@@ -832,14 +846,14 @@ function bizSection(c, a) {
       return `<option value="${k}" ${k === cur ? "selected" : ""} ${full ? "disabled" : ""}>${z.name}${full ? ` (city has ${z.max})` : ""}</option>`;
     }).join("");
     const rows = picks.map(([k, i], j) => `<div class="bzrow"><select data-bizi="${i}" aria-label="${label} ${j + 1}">${opts(k)}</select>`
-      + (j >= lo ? `<span class="bzmaybe" title="Only some of this building's floor plans have this unit">if room</span>` : "<span></span>")
       + `<button type="button" data-bizdel="${i}" aria-label="Remove ${BIZ[k].name}">×</button></div>`).join("");
     const add = picks.length < hi ? `<select data-bizadd="${kind}" aria-label="Add ${label.toLowerCase()}"><option value="" selected>+ Add ${label.toLowerCase()}…</option>${opts("")}</select>` : "";
     const left = hi - picks.length;
-    return `<div class="bzgroup"><div class="bzhead">${label} units: <b>${lo === hi ? hi : lo + "–" + hi}</b><span>${KIND_NOTE[kind]}${lo !== hi ? " · depends on the floor plan the game picks" : ""}</span></div>${rows}${add}`
+    return `<div class="bzgroup"><div class="bzhead">${label} units: <b>${lo === hi ? hi : "up to " + hi}</b><span>${KIND_NOTE[kind]}${lo !== hi ? " · the floor plan is chosen to fit what you pick" : ""}</span></div>${rows}${add}`
       + (left > 0 ? `<span class="hint bzleft">${picks.length ? (lo === hi ? left : "the rest") + " left to the game" : "all left to the game"}</span>` : "") + `</div>`;
   }).join("");
-  return `<div><div class="hint">Businesses inside</div><div class="bz-list">${groups}</div></div>`;
+  const clash = planClash(c);
+  return `<div><div class="hint">Businesses inside</div><div class="bz-list">${groups}${clash ? `<p class="bzclash">${clash}</p>` : ""}</div></div>`;
 }
 
 $("pop").addEventListener("change", e => {
