@@ -20,6 +20,9 @@ namespace CityPlanner;
 /// PC only (127.0.0.1, never the network): it serves the planner page, reports whether the game is ready, and takes
 /// plans the page sends, which are checked, written to cityplan.txt and used for the next city generated.
 /// The New Game screen gets a "City Planner" button that opens the page in the player's browser.
+/// Only the page the game serves can use the link: each game session makes a random token that is written into that
+/// page, and every request but the page itself must carry it. Other pages (websites, copies opened from disk) can't
+/// learn it. With the link turned off in the config, the button opens the page from disk and no port is opened.
 /// </summary>
 internal static class PlannerLink
 {
@@ -33,16 +36,27 @@ internal static class PlannerLink
     /// <summary>A city is being generated: the plan must not change until it's done.</summary>
     internal static volatile bool Generating;
 
-    internal static string PageUrl => $"http://127.0.0.1:{port}/";
+    /// <summary>This session's secret, written into the served page. New every time the game starts.</summary>
+    private static readonly string token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16)).ToLowerInvariant();
 
-    public static void Start(int listenPort)
+    private static bool listening;
+
+    internal static string PageUrl => listening ? $"http://127.0.0.1:{port}/" : pagePath != null ? new Uri(pagePath).AbsoluteUri : null;
+
+    public static void Start(bool enabled, int listenPort)
     {
         port = listenPort;
         pagePath = FindPage();
+        if (!enabled)
+        {
+            Plugin.Logger.LogInfo("Planner link turned off in the config: no port is opened. The City Planner button opens the page from disk; copy plans into cityplan.txt.");
+            return;
+        }
         try
         {
             var listener = new TcpListener(IPAddress.Loopback, port);
             listener.Start();
+            listening = true;
             new Thread(() => Listen(listener)) { IsBackground = true, Name = "CityPlannerLink" }.Start();
             Plugin.Logger.LogInfo($"Planner page link ready at {PageUrl} (this PC only)" + (pagePath == null ? "; city-planner.html not found, so the page can't be opened from the game" : ""));
         }
@@ -70,6 +84,11 @@ internal static class PlannerLink
 
     public static void OpenPage()
     {
+        if (PageUrl == null)
+        {
+            Plugin.Logger.LogWarning("city-planner.html wasn't found in the City Planner mod folder. Reinstall the mod.");
+            return;
+        }
         Plugin.Logger.LogInfo("Opening the planner page: " + PageUrl);
         Application.OpenURL(PageUrl);
     }
@@ -103,37 +122,44 @@ internal static class PlannerLink
                 var stream = client.GetStream();
                 if (!ReadRequest(stream, out var method, out var target, out var headers, out var body)) return;
 
-                // Only pages on this PC may talk to the game: the planner opened from the game, or the planner file
-                // opened from disk (its origin is "null"). Anything else, such as a website in the same browser, is refused.
+                // Addressed to this PC by name (a website can't point its own name here, DNS rebinding), and not from
+                // another site: browsers send an Origin with every cross-site request, so any other origin is refused.
                 var host = headers.TryGetValue("host", out var h) ? h : "";
                 var origin = headers.TryGetValue("origin", out var o) ? o : null;
                 var ours = new[] { $"http://127.0.0.1:{port}", $"http://localhost:{port}" };
-                if (!ours.Any(u => u == "http://" + host) || (origin != null && origin != "null" && !ours.Contains(origin)))
+                if (!ours.Any(u => u == "http://" + host) || (origin != null && !ours.Contains(origin)))
                 {
-                    Respond(stream, 403, "text/plain", "Only the City Planner page can talk to the game.", null);
+                    Respond(stream, 403, "text/plain", "Only the City Planner page can talk to the game.");
                     return;
                 }
-                var cors = origin ?? "null";
                 var path = target.Split('?')[0];
-                if (method == "OPTIONS")
-                    Respond(stream, 204, "text/plain", "", cors);
-                else if (method == "GET" && (path == "/" || path == "/city-planner.html"))
+                if (method == "GET" && (path == "/" || path == "/city-planner.html"))
                 {
-                    if (pagePath != null && File.Exists(pagePath)) Respond(stream, 200, "text/html; charset=utf-8", File.ReadAllText(pagePath), cors);
-                    else Respond(stream, 404, "text/plain", "city-planner.html wasn't found in the City Planner mod folder. Reinstall the mod.", cors);
+                    // The page itself is the only thing served without the token: it carries the token, and other sites
+                    // can neither read it (no CORS headers) nor show it in a frame.
+                    if (pagePath != null && File.Exists(pagePath))
+                        Respond(stream, 200, "text/html; charset=utf-8", File.ReadAllText(pagePath).Replace(TokenSlot, $"\"{token}\""));
+                    else Respond(stream, 404, "text/plain", "city-planner.html wasn't found in the City Planner mod folder. Reinstall the mod.");
+                    return;
                 }
-                else if (method == "GET" && path == "/plan")
+                if (!headers.TryGetValue("x-planner-token", out var sent) ||
+                    !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(sent), Encoding.ASCII.GetBytes(token)))
+                {
+                    Respond(stream, 403, "text/plain", "This planner page is from an earlier game session. Open it again with the City Planner button.");
+                    return;
+                }
+                if (method == "GET" && path == "/plan")
                 {
                     // The plan the game is using, so the page can open on it. Empty if there's none yet.
                     var text = File.Exists(Plugin.PlanPath) ? File.ReadAllText(Plugin.PlanPath) : "";
-                    Respond(stream, 200, "text/plain; charset=utf-8", text, cors);
+                    Respond(stream, 200, "text/plain; charset=utf-8", text);
                 }
                 else if (method == "GET" && path == "/status")
-                    Respond(stream, 200, "application/json", Status, cors);
+                    Respond(stream, 200, "application/json", Status);
                 else if (method == "POST" && path == "/plan")
-                    Respond(stream, 200, "application/json", ReceivePlan(body), cors);
+                    Respond(stream, 200, "application/json", ReceivePlan(body));
                 else
-                    Respond(stream, 404, "text/plain", "Not found", cors);
+                    Respond(stream, 404, "text/plain", "Not found");
             }
             catch (Exception e)
             {
@@ -217,13 +243,16 @@ internal static class PlannerLink
         return -1;
     }
 
-    private static void Respond(NetworkStream stream, int code, string type, string content, string cors)
+    /// <summary>Where the served page gets this session's token (the copy on disk keeps an empty one).</summary>
+    private const string TokenSlot = "/*PLANNER_TOKEN*/\"\"";
+
+    private static void Respond(NetworkStream stream, int code, string type, string content)
     {
         var bytes = Encoding.UTF8.GetBytes(content);
-        var reason = code switch { 200 => "OK", 204 => "No Content", 403 => "Forbidden", _ => "Not Found" };
-        var head = $"HTTP/1.1 {code} {reason}\r\nContent-Type: {type}\r\nContent-Length: {bytes.Length}\r\nCache-Control: no-store\r\nConnection: close\r\n";
-        if (cors != null)
-            head += $"Access-Control-Allow-Origin: {cors}\r\nAccess-Control-Allow-Methods: GET, POST\r\nAccess-Control-Allow-Headers: Content-Type\r\nAccess-Control-Allow-Private-Network: true\r\n";
+        var reason = code switch { 200 => "OK", 403 => "Forbidden", _ => "Not Found" };
+        // No CORS headers: only the page the game serves (same origin) can read answers. Never shown inside another page.
+        var head = $"HTTP/1.1 {code} {reason}\r\nContent-Type: {type}\r\nContent-Length: {bytes.Length}\r\nCache-Control: no-store\r\nConnection: close\r\n" +
+                   "X-Frame-Options: DENY\r\nContent-Security-Policy: frame-ancestors 'none'\r\nX-Content-Type-Options: nosniff\r\n";
         var headBytes = Encoding.ASCII.GetBytes(head + "\r\n");
         stream.Write(headBytes, 0, headBytes.Length);
         stream.Write(bytes, 0, bytes.Length);

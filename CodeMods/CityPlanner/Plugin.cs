@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.0")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.1")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -34,6 +34,7 @@ public class Plugin : BasePlugin
     internal static BepInEx.Configuration.ConfigEntry<int> EdgeGateReach;
     internal static BepInEx.Configuration.ConfigEntry<BuildingPreset.LandValue> GritFreeFrom;
     internal static BepInEx.Configuration.ConfigEntry<int> PlannerPort;
+    internal static BepInEx.Configuration.ConfigEntry<bool> PlannerLinkOn;
     internal static string PlanPath => Path.Combine(Paths.ConfigPath, "cityplan.txt");
     private static DateTime planFileTime;
 
@@ -44,6 +45,8 @@ public class Plugin : BasePlugin
             "City sizes planned so far, so cities made at those sizes still load. Planned sizes are added automatically. Never remove or reorder entries.");
         PlannerPort = Config.Bind("Planner", "Port", 47811,
             "The planner page sends plans to the game through this port, on this PC only. Change it only if another program uses it; the page opened from the game's City Planner button follows the change.");
+        PlannerLinkOn = Config.Bind("Planner", "Link", true,
+            "Let the planner page send plans straight to the game (through a port on this PC only, while the game runs). Off: no port is opened; the City Planner button opens the page from disk and you copy plans into cityplan.txt.");
         HomeWealth = Config.Bind("Wealth", "DistrictHomeWealth", true, "Homes take their wealth mainly from their district (otherwise mostly from floor height, as in vanilla).");
         StreetWealth = Config.Bind("Wealth", "AverageStreetWealth", true, "Streets take the average wealth of the tiles they cover (vanilla: their first tile), for street decoration.");
         StreetThemes = Config.Bind("Wealth", "StreetThemes", true,
@@ -62,7 +65,7 @@ public class Plugin : BasePlugin
         if (Plan == null && !File.Exists(PlanPath)) Log.LogInfo("No city plan in the config folder: city generation is unchanged.");
         new Harmony("sodmods.cityplanner").PatchAll(typeof(Plugin).Assembly);
         AddComponent<PlannerPump>();
-        PlannerLink.Start(PlannerPort.Value);
+        PlannerLink.Start(PlannerLinkOn.Value, PlannerPort.Value);
         Log.LogInfo("City Planner loaded");
     }
 

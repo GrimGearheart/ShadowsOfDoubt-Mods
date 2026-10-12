@@ -1023,9 +1023,16 @@ function say(t) { $("msg").textContent = t; }
 // ---------------------------------------------------------------- Sending to the game
 // The game (with City Planner) answers on this PC only. Opened from the game's City Planner button, this page is
 // served by the game itself; opened as a file, it talks to the default port.
-const GAME = location.protocol === "http:" && /^(127\.0\.0\.1|localhost)$/.test(location.hostname) ? "" : "http://127.0.0.1:47811";
-const CAN_REACH = GAME === "" || location.protocol === "file:";
-const ONLINE_NOTE = "Send to game works in the copy that comes with City Planner. Open it with the City Planner button on the game's New Game screen.";
+// Only the page the game serves can talk to it: the game writes this session's token in here (copies elsewhere keep
+// it empty, and use Copy cityplan.txt instead).
+const TOKEN = /*PLANNER_TOKEN*/"";
+const GAME = "";
+const CAN_REACH = TOKEN !== "" && location.protocol === "http:";
+const ONLINE_NOTE = location.protocol === "file:"
+  ? "Send to game works in the planner opened with the City Planner button on the game's New Game screen. From here, use Copy cityplan.txt and save it as BepInEx/config/cityplan.txt."
+  : "Send to game works in the planner opened with the City Planner button on the game's New Game screen.";
+const STALE_NOTE = "This page is from an earlier game session. Open it again with the City Planner button (your plan is kept).";
+const ask = (path, opts = {}) => fetch(GAME + path, { cache: "no-store", ...opts, headers: { ...(opts.headers || {}), "X-Planner-Token": TOKEN } });
 
 function setLink(on, text) {
   $("link").className = "link " + (on ? "on" : "off");
@@ -1035,7 +1042,8 @@ function setLink(on, text) {
 async function checkGame() {
   if (!CAN_REACH) { setLink(false, ONLINE_NOTE); return; }
   try {
-    const r = await fetch(GAME + "/status", { cache: "no-store" });
+    const r = await ask("/status");
+    if (r.status === 403) { setLink(false, STALE_NOTE); return; }
     const st = await r.json();
     const plan = st.plan ? ` Current plan: ${st.plan.blocks || st.plan.size}.` : "";
     setLink(true, st.state === "generating" ? "Connected. The game is generating a city right now."
@@ -1061,7 +1069,8 @@ $("btnSend").addEventListener("click", async () => {
   if (analyse().issues.some(i => i[0] === "error")) { msg("Fix the problems listed under Checks first."); return; }
   msg("Sending…");
   try {
-    const r = await fetch(GAME + "/plan", { method: "POST", headers: { "Content-Type": "text/plain" }, body: planText() });
+    const r = await ask("/plan", { method: "POST", headers: { "Content-Type": "text/plain" }, body: planText() });
+    if (r.status === 403) { msg(STALE_NOTE); return; }
     const res = await r.json();
     if (!res.ok) msg("The game couldn't use this plan: " + res.error);
     else if (res.when === "after") msg(`Sent. The game is generating a city right now, so your ${res.blocks || res.size} plan is saved and used for the next one.`);
@@ -1075,7 +1084,7 @@ $("btnSend").addEventListener("click", async () => {
 checkGame();
 // First visit: open on the plan the game is using, if it has one (otherwise the blank start stays).
 if (CAN_REACH && !hadSavedWork) {
-  fetch(GAME + "/plan", { cache: "no-store" }).then(r => r.text()).then(text => {
+  ask("/plan").then(r => r.ok ? r.text() : "").then(text => {
     if (!text.trim() || hadSavedWork) return;
     try { state = parsePlan(text); render(); say("Opened the plan the game is using."); } catch (e) { say("The game's current plan couldn't be read: " + e.message); }
   }).catch(() => {});

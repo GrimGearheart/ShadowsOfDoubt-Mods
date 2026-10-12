@@ -100,13 +100,16 @@ In `BepInEx/config/sodmods.cityplanner.cfg`:
 | `Wealth / GritDecorations`, `GritFreeFrom` | Which street decorations count as grit, and from which wealth level they're kept out. |
 | `Streets / OpenAlleysIn` | Districts (by planned name) where alleys become back streets. Not used when the plan paints its own streets. |
 | `Sizes / Keep` | Every city size you've planned, so cities made at those sizes still load. Filled in automatically; never remove or reorder entries. |
+| `Planner / Link` | Lets the planner page send plans straight to the game (on). Off: no connection is opened; copy plans into `cityplan.txt` instead. |
 | `Planner / Port` | The port the planner page uses to send plans to the game (on this PC only). Change it only if another program needs port 47811. |
 
 Every setting only affects cities generated with a plan. Without a `cityplan.txt`, city generation is unchanged.
 
 ## Is the planner connection safe?
 
-*Send to game* goes from your browser to the game over a connection that only works on your own PC. Nothing goes over the internet, and only the City Planner page can use it: plans from anywhere else are refused. It's open only while the game is running.
+*Send to game* goes from your browser to the game over a connection that only works on your own PC (127.0.0.1). Nothing goes over the internet. Only the planner page the game opens can use it: each time the game starts it makes a new secret code and puts it in that page, and anything without the code, such as a website open in the same browser, is refused. It's open only while the game is running.
+
+Rather not have it at all? Set `Planner / Link` to `false`. The game then opens no connection, the *City Planner* button opens the page from disk, and you save plans with *Copy cityplan.txt* into `BepInEx/config/cityplan.txt`.
 
 ## Safe to remove?
 

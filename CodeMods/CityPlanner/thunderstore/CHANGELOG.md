@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- **Tighter planner link:** only the planner page the game opens can send plans to it now. Each game session makes a new secret code that's written into that page, and requests without it are refused. Before, a page opened from disk was also accepted, and a website could pretend to be one. A planner tab left open from an earlier session asks you to reopen it from the *City Planner* button; your plan is kept.
+- **New setting `Planner / Link`:** turn it off and the game opens no connection at all. The *City Planner* button then opens the page from disk, and you save plans with *Copy cityplan.txt*.
+
 ## 1.2.0
 
 - **Choose the businesses in a building:** click a tile to pick what goes in each of its shop units, such as a bar, pharmacy, launderette, pawn shop or sync clinic at street level, or a gambling den, loan shark or weapons dealer in the back rooms. Units you leave alone are filled by the game as before. In the plan file this is a `[Businesses]` section.
