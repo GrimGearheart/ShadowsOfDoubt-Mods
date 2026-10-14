@@ -38,6 +38,9 @@ internal class PlannedTile
     public readonly List<string> Businesses = new();
 }
 
+/// <summary>The player's apartment from the [Home] section: tile (row and column from 1 at the top left) and door number.</summary>
+internal record PlannedHome(int Row, int Col, int Number);
+
 /// <summary>The city plan, read from BepInEx/config/cityplan.txt (see that file for the format).</summary>
 internal class Plan
 {
@@ -50,6 +53,9 @@ internal class Plan
 
     /// <summary>Painted gaps from the [Streets] section. Empty = the game lays out the streets itself.</summary>
     public readonly Dictionary<Gap, StreetKind> Streets = new();
+
+    /// <summary>The player's apartment, or null.</summary>
+    public PlannedHome Home;
 
     public static Plan Load(string path, out string error)
     {
@@ -71,6 +77,7 @@ internal class Plan
         var rows = new List<string[]>();
         var streetLines = new List<string>();
         var businessLines = new List<string>();
+        string homeLine = null;
         var section = "";
         foreach (var raw in lines)
         {
@@ -127,6 +134,9 @@ internal class Plan
                     break;
                 case "businesses":
                     businessLines.Add(line);
+                    break;
+                case "home":
+                    homeLine = line;
                     break;
             }
         }
@@ -199,6 +209,11 @@ internal class Plan
                 return null;
             }
         }
+        if (homeLine != null && !plan.ParseHomeLine(homeLine, out error))
+        {
+            error = $"[Home] '{homeLine}': {error}";
+            return null;
+        }
         foreach (var line in businessLines)
         {
             if (!plan.ParseBusinessLine(line, out error))
@@ -208,6 +223,27 @@ internal class Plan
             }
         }
         return plan;
+    }
+
+    /// <summary>"Apartment = R3 C4 1701": the player's apartment, by tile and the number on its door.</summary>
+    private bool ParseHomeLine(string line, out string error)
+    {
+        error = null;
+        var m = System.Text.RegularExpressions.Regex.Match(line, @"^\s*Apartment\s*=\s*R(\d+)\s+C(\d+)\s+(\d+)\s*$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (!m.Success)
+        {
+            error = "write it as Apartment = R<row> C<column> <apartment number>, e.g. Apartment = R3 C4 1701";
+            return false;
+        }
+        int row = int.Parse(m.Groups[1].Value), col = int.Parse(m.Groups[2].Value), number = int.Parse(m.Groups[3].Value);
+        if (row < 1 || row > Height - 2 || col < 1 || col > Width - 2)
+        {
+            error = $"needs a tile inside the map (R1-R{Height - 2} C1-C{Width - 2})";
+            return false;
+        }
+        Home = new PlannedHome(row, col, number);
+        return true;
     }
 
     /// <summary>The businesses a plan can ask for, by the names players write; values are the game's preset names.</summary>

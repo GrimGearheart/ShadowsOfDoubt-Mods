@@ -16,6 +16,7 @@ City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-do
 - **Districts:** where each one is, its name, its type (Residential, CBD, Chinatown, Red Light, Industrial…), its wealth and its density.
 - **Buildings (optional):** which building goes on each tile, and which side its front faces. Tiles left on *game decides* get a building the game picks for that district.
 - **Businesses (optional):** choose what goes in a building's shop units: the bar on the corner, the pharmacy next door, the gambling den in the basement. Units you leave alone are filled by the game.
+- **Your apartment (optional):** pick the apartment you live in, or the one waiting for you to buy.
 - **Streets (optional):** paint any gap between two tiles as a main road, back street or alley. Gaps you leave alone are decided by the game.
 
 The plan also changes how wealth works in your city:
@@ -87,6 +88,20 @@ R5 C1 = Bar, Pharmacy, Gambling Den
 R3 C3 = Sync Clinic, Supermarket
 ```
 
+## Your apartment
+
+Under *Your apartment* in the planner, pick a tile with homes and the number on the apartment's door: 1701 is floor 17, flat 01. Clicking a tile also offers *My apartment is in this building*. What happens to it is the `Home / Mode` setting:
+
+- **Own** (the default): it's your starting apartment. Every new game in the city starts you there, as long as the game's sandbox *starting apartment* option is on.
+- **Buy:** nobody moves in, and it's listed for sale like any empty apartment, waiting for you to buy it.
+
+Flat numbers are handed out while the city is made, so if the building has no flat with your number, `LogOutput.log` lists the ones it has and the game picks your apartment as usual. In `cityplan.txt` it's a `[Home]` section:
+
+```
+[Home]
+Apartment = R3 C1 501
+```
+
 ## Settings
 
 In `BepInEx/config/sodmods.cityplanner.cfg`:
@@ -100,6 +115,7 @@ In `BepInEx/config/sodmods.cityplanner.cfg`:
 | `Wealth / GritDecorations`, `GritFreeFrom` | Which street decorations count as grit, and from which wealth level they're kept out. |
 | `Streets / OpenAlleysIn` | Districts (by planned name) where alleys become back streets. Not used when the plan paints its own streets. |
 | `Sizes / Keep` | Every city size you've planned, so cities made at those sizes still load. Filled in automatically; never remove or reorder entries. |
+| `Home / Mode` | What happens to the apartment in the plan: `Own` (your starting apartment) or `Buy` (kept empty and for sale). |
 | `Planner / Link` | Lets the planner page send plans straight to the game (on). Off: no connection is opened; copy plans into `cityplan.txt` instead. |
 | `Planner / Port` | The port the planner page uses to send plans to the game (on this PC only). Change it only if another program needs port 47811. |
 
@@ -119,6 +135,11 @@ Rather not have it at all? Set `Planner / Link` to `false`. The game then opens 
 
 - Built for the main (IL2CPP) branch of the game.
 - Works alongside other mods, including The Protectorate's.
+
+## Thanks
+
+- **Tayelikel** for the *Your apartment* idea and its first version, and for the bug reports and save files behind several fixes.
+- **ටrionis** for the review that led to the tighter planner link, and for pushing to check whether cities need City Planner to load. They don't.
 
 ## Feedback
 

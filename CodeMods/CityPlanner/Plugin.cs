@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.2.2")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.3.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -35,6 +35,7 @@ public class Plugin : BasePlugin
     internal static BepInEx.Configuration.ConfigEntry<BuildingPreset.LandValue> GritFreeFrom;
     internal static BepInEx.Configuration.ConfigEntry<int> PlannerPort;
     internal static BepInEx.Configuration.ConfigEntry<bool> PlannerLinkOn;
+    internal static BepInEx.Configuration.ConfigEntry<Home.Mode> HomeMode;
     internal static string PlanPath => Path.Combine(Paths.ConfigPath, "cityplan.txt");
     private static DateTime planFileTime;
 
@@ -47,6 +48,8 @@ public class Plugin : BasePlugin
             "The planner page sends plans to the game through this port, on this PC only. Change it only if another program uses it; the page opened from the game's City Planner button follows the change.");
         PlannerLinkOn = Config.Bind("Planner", "Link", true,
             "Let the planner page send plans straight to the game (through a port on this PC only, while the game runs). Off: no port is opened; the City Planner button opens the page from disk and you copy plans into cityplan.txt.");
+        HomeMode = Config.Bind("Home", "Mode", CityPlanner.Home.Mode.Own,
+            "The apartment in the plan's [Home] section. Own: it's the player's starting apartment (new games in the city start there, with the game's sandbox starting apartment option on). Buy: it stays empty and is listed for sale like any empty apartment. Used when a city is generated.");
         HomeWealth = Config.Bind("Wealth", "DistrictHomeWealth", true, "Homes take their wealth mainly from their district (otherwise mostly from floor height, as in vanilla).");
         StreetWealth = Config.Bind("Wealth", "AverageStreetWealth", true, "Streets take the average wealth of the tiles they cover (vanilla: their first tile), for street decoration.");
         StreetThemes = Config.Bind("Wealth", "StreetThemes", true,
@@ -385,7 +388,7 @@ internal static class BuildingsPatch
 [HarmonyPatch(typeof(CityConstructor), "Update")]
 internal static class StagePatch
 {
-    internal static bool DistrictsDone, BuildingsDone, SortDone, AlleysDone, BusinessesDone;
+    internal static bool DistrictsDone, BuildingsDone, SortDone, AlleysDone, BusinessesDone, HomeDone, HomeFinished;
 
     private static void Prefix(CityConstructor __instance)
     {
@@ -416,6 +419,17 @@ internal static class StagePatch
             // Every unit exists now; the game is about to choose what each one becomes.
             BusinessesDone = true;
             Businesses.Run();
+        }
+        else if (__instance.loadState == CityConstructor.LoadState.generateCitizens && !HomeDone)
+        {
+            // Every apartment has its number now; residents move in during this stage.
+            HomeDone = true;
+            Home.Prepare();
+        }
+        else if (__instance.loadState == CityConstructor.LoadState.generateRelationships && !HomeFinished)
+        {
+            HomeFinished = true;
+            Home.Finish();
         }
         else if (__instance.loadState == CityConstructor.LoadState.generateInteriors && !StreetThemes.Prepared)
         {
@@ -741,7 +755,8 @@ internal static class GenerateTimer
 
     private static void Prefix()
     {
-        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = StagePatch.BusinessesDone = false;
+        StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = StagePatch.BusinessesDone = StagePatch.HomeDone = StagePatch.HomeFinished = false;
+        Home.Restore();
         Businesses.Planned.Clear();
         AddressWealthPatch.Count = 0;
         StreetThemes.Restore();

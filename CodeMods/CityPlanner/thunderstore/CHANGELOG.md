@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- **Choose your apartment:** pick a building and an apartment number under *Your apartment* in the planner (a `[Home]` section in the plan). With `Home / Mode` on `Own` it's your starting apartment; on `Buy` nobody moves in and it's listed for sale. Idea and first version by Tayelikel.
+- Added a *Thanks* section to the README.
+
 ## 1.2.2
 
 - Corrected the README's *Safe to remove?* section: cities and saves load without City Planner (tested with Margin City). You only need it to generate a planned city. No changes to the mod itself.

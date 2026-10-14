@@ -138,6 +138,7 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .cell .front.E { right: 3px; top: 24%; bottom: 24%; width: 4px; }
 .cell .front.W { left: 3px; top: 24%; bottom: 24%; width: 4px; }
 .cell .bz { position: absolute; bottom: 3px; right: 4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: rgba(0, 0, 0, .45); font: 600 10px/15px var(--mono); }
+.cell .hm { position: absolute; top: 2px; left: 4px; font-size: 13px; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .bz-list { display: grid; gap: 12px; }
 .bzgroup { display: grid; gap: 5px; }
 .bzhead { font-size: 13px; }
@@ -278,6 +279,17 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
         <div class="row" style="justify-content:space-between"><p class="hint" style="margin:0;flex:1;min-width:0">Click a colour to paint with that district. Land value sets how wealthy homes are and how clean or gritty the streets look. Density sets how tightly packed it is.</p><button id="btnAddD" type="button">Add district</button></div>
         <div id="districts" class="dlist"></div>
       </section>
+      <section class="card" aria-label="Your apartment">
+        <span class="tab">YOUR APARTMENT</span>
+        <p class="hint" style="margin:0">Pick the apartment you want: a tile with homes and the number on its door (1701 = floor 17, flat 01). City Planner's <b>Home / Mode</b> setting decides whether it's your starting apartment (<i>Own</i>) or kept empty and up for sale (<i>Buy</i>). Idea by Tayelikel.</p>
+        <div class="row">
+          <label class="field"><span>Tile</span><input id="homeTile" type="text" placeholder="A3" maxlength="4" style="width:70px"></label>
+          <label class="field"><span>Apartment</span><input id="homeUnit" type="text" placeholder="501" maxlength="5" style="width:85px" inputmode="numeric"></label>
+          <button id="homeSet" type="button" style="align-self:end">Set</button>
+          <button id="homeClear" type="button" style="align-self:end">Clear</button>
+        </div>
+        <span id="homeStatus" class="hint" role="status"></span>
+      </section>
       <section class="card" aria-label="Import and export">
         <span class="tab">PLAN FILE</span>
         <textarea id="planText" spellcheck="false" aria-label="cityplan.txt contents"></textarea>
@@ -405,6 +417,7 @@ const $ = id => document.getElementById(id);
 function parsePlan(text) {
   const out = { w: 0, h: 0, pop: 1, districts: [], cells: [], streets: {} };
   const streetLines = [], bizLines = [];
+  let homeLine = null;
   const codes = {};
   let section = "";
   for (const raw of text.split(/\r?\n/)) {
@@ -432,6 +445,8 @@ function parsePlan(text) {
       streetLines.push(line);
     } else if (section === "businesses") {
       bizLines.push(line);
+    } else if (section === "home") {
+      homeLine = line;
     } else if (section === "map") {
       out.cells.push(line.split(/\s+/).map(cell => {
         const [d, rest] = cell.split(":");
@@ -449,6 +464,11 @@ function parsePlan(text) {
   out.cells.forEach((r, i) => { if (r.length !== out.w - 2) throw new Error(`Map row ${i + 1} has ${r.length} cells; it needs ${out.w - 2}.`); });
   for (const line of streetLines) parseStreetLine(line, out);
   for (const line of bizLines) parseBizLine(line, out);
+  if (homeLine) {
+    const m = homeLine.match(/^Apartment\s*=\s*R(\d+)\s+C(\d+)\s+(\d+)$/i);
+    if (!m) throw new Error("Home line needs 'Apartment = R<row> C<column> <number>': " + homeLine);
+    out.home = { row: +m[1], col: +m[2], number: +m[3] };
+  }
   return out;
 }
 
@@ -553,6 +573,8 @@ function planText() {
   const bl = [];
   state.cells.forEach((r, y) => r.forEach((c, x) => { if (c.biz?.length) bl.push(`R${y + 1} C${x + 1} = ${c.biz.join(", ")}`); }));
   if (bl.length) lines.push("", "# Businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.", "[Businesses]", ...bl);
+  if (state.home) lines.push("", "# Your apartment: tile and the number on its door. City Planner's Home / Mode setting: Own or Buy.", "[Home]",
+    `Apartment = R${state.home.row} C${state.home.col} ${state.home.number}`);
   return lines.join("\n") + "\n";
 }
 
@@ -641,6 +663,15 @@ function analyse() {
     // A required building can still come from the game if a district it's allowed in has tiles left open.
     if (b.min && n < b.min && !b.in.some(openIn))
       issues.push([code === "CH" ? "error" : "warning", code === "CH" ? "The city needs exactly one City Hall (it houses the Enforcers). Place one, or leave a Downtown (CBD) tile to the game." : `No ${b.name}. The game expects at least one; place one or leave an Industrial tile to the game.`]);
+  }
+  const hm = state.home;
+  if (hm) {
+    const cell = state.cells[hm.row - 1]?.[hm.col - 1];
+    const floor = Math.floor(hm.number / 100);
+    if (!cell) issues.push(["error", "Your apartment is on a tile outside the map. Set it again or clear it."]);
+    else if (cell.b && !B[cell.b].homes) issues.push(["error", `Your apartment is in a ${B[cell.b].name}, which has no homes. Pick a building with apartments.`]);
+    else if (cell.b && floor >= B[cell.b].floors) issues.push(["warning", `Your apartment is on floor ${floor}, but a ${B[cell.b].name} has ${B[cell.b].floors} floors (0 to ${B[cell.b].floors - 1}).`]);
+    else issues.push(["okay", `Your apartment: ${colName(hm.col - 1)}${hm.row}, number ${hm.number}. If the building has no flat with that number, the log lists the ones it has.`]);
   }
   for (const [k, z] of Object.entries(BIZ)) {
     const n = bizCount[k] || 0;
@@ -752,7 +783,8 @@ function render() {
     else {
       el.style.background = dist ? dist.colour : "#777";
       el.innerHTML = `<span class="code">${B[c.b].short}</span><span class="fl">${B[c.b].floors}F</span><span class="dk">${c.d}</span>` + (c.f ? `<span class="front ${c.f}"></span>` : "")
-        + (c.biz?.length ? `<span class="bz" aria-hidden="true">${c.biz.length}</span>` : "");
+        + (c.biz?.length ? `<span class="bz" aria-hidden="true">${c.biz.length}</span>` : "")
+        + (state.home && state.home.row === y + 1 && state.home.col === x + 1 ? `<span class="hm" title="Your apartment">⌂</span>` : "");
     }
     el.setAttribute("aria-label", `${colName(x)}${y + 1}: ${c.b ? B[c.b].name : "building chosen by the game"}${dist ? ", " + dist.name : ""}${c.f ? ", front " + c.f : ""}${c.biz?.length ? ", businesses: " + c.biz.map(k => BIZ[k].name).join(", ") : ""}`);
     el.title = `${c.b ? B[c.b].name : "Game decides"}${dist ? " · " + dist.name : ""}${c.f ? " · front " + c.f : ""}${c.biz?.length ? "\n" + c.biz.map(k => BIZ[k].name).join(", ") : ""}`;
@@ -778,6 +810,11 @@ function render() {
   $("banner").hidden = !bd;
   if (bd) { $("banner").style.background = bd.colour; $("banner").innerHTML = `<span>Painting: ${bd.name}</span><button type="button">Done painting</button>`; }
   renderDistricts();
+  if (document.activeElement !== $("homeTile") && document.activeElement !== $("homeUnit")) {
+    $("homeTile").value = state.home ? `${colName(state.home.col - 1)}${state.home.row}` : "";
+    $("homeUnit").value = state.home ? state.home.number : "";
+  }
+  $("homeStatus").textContent = state.home ? `Set: ${colName(state.home.col - 1)}${state.home.row}, apartment ${state.home.number}.` : "No apartment chosen: the game picks yours.";
   $("inW").value = state.w - 2; $("inH").value = state.h - 2; $("inPop").value = state.pop;
   if (document.activeElement !== $("planText")) $("planText").value = planText();
   save();
@@ -824,6 +861,7 @@ function openPop(x, y, anchor) {
     <div><div class="hint">District</div><div class="seg">${state.districts.map(d => `<button type="button" data-district="${d.key}" class="${d.key === c.d ? "on" : ""}" style="border-left:6px solid ${d.colour}">${d.name}</button>`).join("")}</div></div>
     <div><div class="hint">Front faces</div><div class="seg">${[["", "Game decides"], ["N", "North"], ["E", "East"], ["S", "South"], ["W", "West"]].map(([v, l]) => `<button type="button" data-face="${v}" class="${c.f === v ? "on" : ""}">${l}</button>`).join("")}</div></div>
     ${bizSection(c, a)}
+    ${!c.b || B[c.b].homes ? `<div class="row"><button type="button" data-home>${state.home && state.home.row === y + 1 && state.home.col === x + 1 ? "My apartment is here ✓" : "My apartment is in this building…"}</button></div>` : ""}
     <button type="button" class="opt ${c.b ? "" : "cur"}" data-gamepick><span class="c">?</span><span><span class="n">Game decides</span><span class="d">The game picks a building that suits the district</span></span><span></span></button>
     ${byCat}
     <div class="row" style="justify-content:flex-end"><button type="button" class="primary" data-close>Done</button></div>`;
@@ -876,6 +914,14 @@ $("pop").addEventListener("click", e => {
   if (t.hasAttribute("data-close")) return closePop();
   selected = { x: +pop.dataset.x, y: +pop.dataset.y };
   const c = state.cells[selected.y][selected.x];
+  if (t.hasAttribute("data-home")) {
+    const tile = `${colName(selected.x)}${selected.y + 1}`;
+    closePop();
+    $("homeTile").value = tile;
+    $("homeUnit").focus();
+    say(`Type the apartment number for ${tile} under Your apartment, then press Set.`);
+    return;
+  }
   if (t.dataset.bizdel !== undefined) c.biz.splice(+t.dataset.bizdel, 1);
   if (t.dataset.pick) { c.b = t.dataset.pick; fitBiz(c); closePop(); return; }
   if (t.dataset.district) c.d = t.dataset.district;
@@ -1020,6 +1066,7 @@ function resize(w, h) {
     cells.push(row);
   }
   state.w = w; state.h = h; state.cells = cells;
+  if (state.home && (state.home.row > h - 2 || state.home.col > w - 2)) delete state.home;
   for (const key of Object.keys(state.streets || {})) {
     const [, t, b, n] = key.match(/^([hv])(\d+),(\d+)$/);
     const ok = t === "h" ? +b <= h - 2 && +n <= w - 2 : +b <= w - 2 && +n <= h - 2;
@@ -1031,6 +1078,18 @@ function resize(w, h) {
 $("inW").addEventListener("change", e => resize(+e.target.value + 2, state.h));
 $("inH").addEventListener("change", e => resize(state.w, +e.target.value + 2));
 $("inPop").addEventListener("change", e => { state.pop = Math.max(0.1, Math.min(2, Math.round(+e.target.value * 100) / 100 || 0.75)); render(); });
+
+$("homeSet").addEventListener("click", () => {
+  const tile = $("homeTile").value.trim().toUpperCase().match(/^([A-Z])(\d+)$/);
+  const number = /^\d+$/.test($("homeUnit").value.trim()) ? +$("homeUnit").value.trim() : 0;
+  const col = tile ? tile[1].charCodeAt(0) - 64 : 0, row = tile ? +tile[2] : 0;
+  if (!tile || col > state.w - 2 || row < 1 || row > state.h - 2 || number < 1) {
+    say("Give a tile on the map (column letter and row, like A3) and the apartment number on the door (like 501).");
+    return;
+  }
+  change("Apartment set.", () => { state.home = { row, col, number }; });
+});
+$("homeClear").addEventListener("click", () => change("Apartment cleared: the game picks yours.", () => { delete state.home; }));
 
 function say(t) { $("msg").textContent = t; }
 

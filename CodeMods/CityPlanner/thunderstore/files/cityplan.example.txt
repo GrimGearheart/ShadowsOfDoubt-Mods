@@ -60,3 +60,8 @@ S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP
 # Squat, Empty. Margin City itself was generated without planned businesses.
 # [Businesses]
 # R5 C1 = Bar, Pharmacy, Gambling Den
+
+# Optional: your apartment, by tile and the number on its door (501 = floor 5, flat 01). City Planner's Home / Mode
+# setting decides whether it's your starting apartment (Own) or kept empty and for sale (Buy).
+# [Home]
+# Apartment = R3 C1 501
