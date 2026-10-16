@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+
+- **Wood tone:** choose how light or dark the wood is in a building's shared spaces. Wood floors, marble floors and wooden trim take the wood tone, not the colour scheme, so until now they came out light or dark by chance.
+- **See what the colours do:** under each floor, wall and ceiling, dots in your scheme's colours show which of its five colours it takes, so you can see "white marble" before you pick it. Ones that keep their own colours say so.
+
 ## 1.4.0
 
 - **Decor:** a new *Decor* step in the planner sets the colours, floor, walls, ceiling and era of a building's shared spaces (lobby, stairwells, building bathrooms), for one building or as a default for a whole district. Pictures of each floor and wall come from the game itself. Lobbies keep what you chose instead of swapping to lino or marble on the ground floor and in stairwells. In the plan this is a `[Decor]` section. Suggested by Tayelikel.

@@ -93,7 +93,8 @@ R3 C3 = Sync Clinic, Supermarket
 
 The *Decor* step sets the look of a building's **shared spaces**: its lobby, stairwells, building bathrooms, atrium and (in the hotel) ballroom. They always share one look, so one choice covers them all. Click a tile and choose:
 
-- **Colours:** one of the game's colour schemes, shown as swatches.
+- **Colours:** one of the game's colour schemes: a set of five colours, shown as swatches. Each wall, floor and ceiling takes the colours it's made for (marble walls take the middle swatch, carpets the outer ones), and the picker shows which with little dots in your scheme's colours. Some keep their own colours whatever you pick.
+- **Wood:** the wood tone, from light to dark. Wood floors (varnished, parquet, rough), marble floors and wooden trim take this instead of the colour scheme.
 - **Floor, walls and ceiling:** with the game's own pictures of each, when you open the planner from the game.
 - **Era:** Early century, Mid century, 60s–70s, 80s modern or Industrial. It also steers any floor, wall or ceiling you leave open.
 
@@ -105,6 +106,7 @@ In `cityplan.txt` it's a `[Decor]` section; a district letter sets its default, 
 [Decor]
 D = scheme RedsGradient, floor MarbleFloor, walls DecoPanelled
 R3 C1 = floor CarpetKubrick01, style EarlyCentury
+R3 C2 = scheme VenetianRed-Iceburg, walls Marble, floor WoodenFloorVarnished 1, wood #5E3924
 ```
 
 The pictures are drawn from the game's own files on your PC the first time you start the game with this version; nothing from the game is shipped with the mod.

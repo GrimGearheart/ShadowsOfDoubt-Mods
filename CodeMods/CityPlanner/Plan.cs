@@ -243,7 +243,7 @@ internal class Plan
 
     /// <summary>
     /// A [Decor] line: a district letter (its default) or a tile "R3 C4" = comma-separated "part name" pairs, where the
-    /// part is scheme, floor, walls, ceiling or style and the name is the game's, e.g.
+    /// part is scheme, floor, walls, ceiling, style or wood (a colour like #5A3A22) and the name is the game's, e.g.
     /// "D = scheme RedsGradient, floor MarbleFloor" or "R3 C4 = walls DecoPanelled". Later lines add to earlier ones.
     /// </summary>
     private bool ParseDecorLine(string line, out string error)
@@ -289,8 +289,9 @@ internal class Plan
                 case "walls": case "wall": target.Walls = name; break;
                 case "ceiling": target.Ceiling = name; break;
                 case "style": target.Style = name; break;
+                case "wood": target.Wood = name; break;
                 default:
-                    error = $"'{t[..space]}' isn't scheme, floor, walls, ceiling or style";
+                    error = $"'{t[..space]}' isn't scheme, floor, walls, ceiling, style or wood";
                     return false;
             }
         }

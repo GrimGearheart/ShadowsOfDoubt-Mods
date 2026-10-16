@@ -10,13 +10,13 @@ namespace CityPlanner;
 /// <summary>A decor choice from the [Decor] section. Null fields are left to the game (or the district's default).</summary>
 internal class DecorChoice
 {
-    public string Scheme, Floor, Walls, Ceiling, Style;
+    public string Scheme, Floor, Walls, Ceiling, Style, Wood;
 
     /// <summary>This choice, with anything it leaves open taken from the fallback.</summary>
     public DecorChoice Over(DecorChoice fallback) => fallback == null ? this : new DecorChoice
     {
         Scheme = Scheme ?? fallback.Scheme, Floor = Floor ?? fallback.Floor, Walls = Walls ?? fallback.Walls,
-        Ceiling = Ceiling ?? fallback.Ceiling, Style = Style ?? fallback.Style,
+        Ceiling = Ceiling ?? fallback.Ceiling, Style = Style ?? fallback.Style, Wood = Wood ?? fallback.Wood,
     };
 }
 
@@ -111,6 +111,17 @@ internal static class Decor
             if (s != null) { b.colourScheme = s; applied.Scheme = s.name; }
             else problems.Add($"no colour scheme '{want.Scheme}'");
         }
+        // Wood tone (a colour like #5A3A22): wood floors and wooden trim take it instead of the colour scheme.
+        if (want.Wood != null)
+        {
+            if (ColorUtility.TryParseHtmlString(want.Wood.StartsWith("#") ? want.Wood : "#" + want.Wood, out var wood))
+            {
+                wood.a = 1f;
+                b.wood = wood;
+                applied.Wood = want.Wood;
+            }
+            else problems.Add($"'{want.Wood}' isn't a colour like #5A3A22");
+        }
         MaterialGroupPreset Pick(string name, MaterialGroupPreset.MaterialType type)
         {
             if (name == null) return null;
@@ -137,7 +148,7 @@ internal static class Decor
         if (ceiling != null) { b.ceilingMaterial = ceiling; if (want.Ceiling != null) applied.Ceiling = ceiling.name; }
 
         // The colour keys tint each material with the scheme, so they're remade whenever either changed.
-        if (applied.Scheme != null || floor != null || walls != null || ceiling != null)
+        if (applied.Scheme != null || applied.Wood != null || floor != null || walls != null || ceiling != null)
         {
             var seed = b.buildingID * 7919;
             Toolbox.MaterialKey Key(MaterialGroupPreset m, int salt)
@@ -153,7 +164,7 @@ internal static class Decor
         Plugin.Logger.LogInfo($"Decor: {where} shared spaces" +
                               (applied.Style != null ? $", style {applied.Style}" : "") + (applied.Scheme != null ? $", colours {applied.Scheme}" : "") +
                               (applied.Floor != null ? $", floor {applied.Floor}" : "") + (applied.Walls != null ? $", walls {applied.Walls}" : "") +
-                              (applied.Ceiling != null ? $", ceiling {applied.Ceiling}" : "") +
+                              (applied.Ceiling != null ? $", ceiling {applied.Ceiling}" : "") + (applied.Wood != null ? $", wood {applied.Wood}" : "") +
                               (problems.Count > 0 ? " (left to the game: " + string.Join("; ", problems) + ")" : ""));
     }
 
