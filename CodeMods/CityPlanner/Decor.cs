@@ -11,13 +11,25 @@ namespace CityPlanner;
 internal class DecorChoice
 {
     public string Scheme, Floor, Walls, Ceiling, Style, Wood;
+    /// <summary>Grime override, 0 (spotless) to 10 (filthy), for every interior surface in the building; null = the game decides.</summary>
+    public int? Grime;
+    /// <summary>Painted colours, by "floor-c1" style keys (surface floor/walls/ceiling, slot main/c1/c2/c3) = #RRGGBB.</summary>
+    public Dictionary<string, string> Paint = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>This choice, with anything it leaves open taken from the fallback.</summary>
-    public DecorChoice Over(DecorChoice fallback) => fallback == null ? this : new DecorChoice
+    public DecorChoice Over(DecorChoice fallback)
     {
-        Scheme = Scheme ?? fallback.Scheme, Floor = Floor ?? fallback.Floor, Walls = Walls ?? fallback.Walls,
-        Ceiling = Ceiling ?? fallback.Ceiling, Style = Style ?? fallback.Style, Wood = Wood ?? fallback.Wood,
-    };
+        if (fallback == null) return this;
+        var merged = new DecorChoice
+        {
+            Scheme = Scheme ?? fallback.Scheme, Floor = Floor ?? fallback.Floor, Walls = Walls ?? fallback.Walls,
+            Ceiling = Ceiling ?? fallback.Ceiling, Style = Style ?? fallback.Style, Wood = Wood ?? fallback.Wood,
+            Grime = Grime ?? fallback.Grime,
+        };
+        foreach (var kv in fallback.Paint) merged.Paint[kv.Key] = kv.Value;
+        foreach (var kv in Paint) merged.Paint[kv.Key] = kv.Value;
+        return merged;
+    }
 }
 
 /// <summary>
@@ -148,7 +160,7 @@ internal static class Decor
         if (ceiling != null) { b.ceilingMaterial = ceiling; if (want.Ceiling != null) applied.Ceiling = ceiling.name; }
 
         // The colour keys tint each material with the scheme, so they're remade whenever either changed.
-        if (applied.Scheme != null || applied.Wood != null || floor != null || walls != null || ceiling != null)
+        if (applied.Scheme != null || applied.Wood != null || want.Paint.Count > 0 || want.Grime != null || floor != null || walls != null || ceiling != null)
         {
             var seed = b.buildingID * 7919;
             Toolbox.MaterialKey Key(MaterialGroupPreset m, int salt)
@@ -159,12 +171,40 @@ internal static class Decor
             if (b.floorMaterial != null) b.floorMatKey = Key(b.floorMaterial, 1);
             if (b.defaultWallMaterial != null) b.defaultWallKey = Key(b.defaultWallMaterial, 2);
             if (b.ceilingMaterial != null) b.ceilingMatKey = Key(b.ceilingMaterial, 3);
+
+            // Painted colours go straight into the finished colours. The city file saves those as they are, so the
+            // paint stays even without City Planner; the scheme still colours the furniture.
+            var painted = 0;
+            foreach (var (key, hex) in want.Paint)
+            {
+                var dash = key.IndexOf('-');
+                var surface = dash > 0 ? key[..dash].ToLowerInvariant() : "";
+                var target = surface switch { "floor" => b.floorMatKey, "walls" => b.defaultWallKey, "ceiling" => b.ceilingMatKey, _ => null };
+                if (target == null || !ColorUtility.TryParseHtmlString(hex.StartsWith("#") ? hex : "#" + hex, out var colour))
+                {
+                    problems.Add($"can't paint '{key} {hex}'");
+                    continue;
+                }
+                colour.a = 1f;
+                switch (key[(dash + 1)..].ToLowerInvariant())
+                {
+                    case "main": target.mainColour = colour; break;
+                    case "c1": target.colour1 = colour; break;
+                    case "c2": target.colour2 = colour; break;
+                    case "c3": target.colour3 = colour; break;
+                    default: problems.Add($"'{key}' isn't main, c1, c2 or c3"); continue;
+                }
+                painted++;
+            }
+            if (painted > 0) applied.Paint = new Dictionary<string, string>(want.Paint, StringComparer.OrdinalIgnoreCase);
         }
         planned[b.Pointer] = applied;
         Plugin.Logger.LogInfo($"Decor: {where} shared spaces" +
                               (applied.Style != null ? $", style {applied.Style}" : "") + (applied.Scheme != null ? $", colours {applied.Scheme}" : "") +
                               (applied.Floor != null ? $", floor {applied.Floor}" : "") + (applied.Walls != null ? $", walls {applied.Walls}" : "") +
                               (applied.Ceiling != null ? $", ceiling {applied.Ceiling}" : "") + (applied.Wood != null ? $", wood {applied.Wood}" : "") +
+                              (want.Grime != null ? $", grime {want.Grime} on every surface" : "") +
+                              (applied.Paint.Count > 0 ? $", painted {string.Join(" ", applied.Paint.Select(kv => kv.Key + " " + kv.Value))}" : "") +
                               (problems.Count > 0 ? " (left to the game: " + string.Join("; ", problems) + ")" : ""));
     }
 
@@ -196,6 +236,35 @@ internal static class Decor
                 __instance.ceilingMatKey = b.ceilingMatKey;
                 __instance.SetCeilingMaterial(b.ceilingMaterial, null, false, getMaterial);
             }
+        }
+    }
+
+    /// <summary>
+    /// Grime. Every wall, floor and ceiling gets a grime level (0 to 1) when its colours are worked out: apartments from
+    /// their residents and value, businesses from their value, and shared spaces from the district's land value, which
+    /// the game does the wrong way round (the richer the district, the grimier the lobby). While a planned city is
+    /// made, shared spaces go by value the right way (very low = filthy, very high = spotless), and a building whose
+    /// plan overrides grime gets exactly that on every interior surface: shared spaces, apartments and businesses.
+    /// Grime is saved with the colours, so it stays without City Planner. Upper Echelon floors stay spotless.
+    /// </summary>
+    [HarmonyPatch(typeof(MaterialsController), nameof(MaterialsController.GenerateMaterialKey))]
+    private static class GrimePatch
+    {
+        private static void Postfix(NewRoom room, bool useGrubiness, NewBuilding building, Toolbox.MaterialKey __result)
+        {
+            if (!useGrubiness || __result == null || !Plugin.Active || SessionData.Instance == null || SessionData.Instance.startedGame) return;
+            var b = building ?? room?.building;
+            if (b?.cityTile == null) return;
+            if (room != null && room.gameLocation != null && room.gameLocation.isOutside) return;
+            if (room != null && b.preset != null && Game.Instance.allowEchelons && b.preset.buildingFeaturesEchelonFloors && room.floor != null &&
+                room.floor.floor >= b.preset.echelonFloorStart) return;
+            var c = b.cityTile.cityCoord;
+            var grime = For(Plugin.Plan, c.x, c.y)?.Grime;
+            if (grime != null)
+                __result.grubiness = Mathf.Clamp(grime.Value, 0, 10) / 10f;
+            else if (room == null && (b.preset == null || !b.preset.overrideGrubiness))
+                // The building-wide colours (copied by its shared spaces): by value, the right way round.
+                __result.grubiness = Mathf.Clamp01(1f - (int)b.cityTile.landValue * 0.25f);
         }
     }
 }

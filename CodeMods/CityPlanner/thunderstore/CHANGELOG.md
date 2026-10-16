@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+- **Paint your own colours:** under the floor, walls and ceiling you've chosen in *Decor*, a colour picker for each part you can paint (marble walls get base and veins, carpets two or three colours). Unpainted parts keep the scheme's colours. Painted colours are saved in the city itself, so they stay even without City Planner.
+- **Grime:** tick *Override grime* in *Decor* and pick spotless to filthy for a building or a whole district. It covers every interior surface: shared spaces, apartments and businesses.
+- **Rich lobbies are clean now.** The game set lobby grime from the district's value the wrong way round, so the richer the district, the grimier its lobbies and stairwells. In planned cities it now goes the right way: very rich is spotless, very poor is filthy.
+- **No more flooded basements, if you like:** set `Basements / Flooded` to `false` and the water in the lowest basements is gone in every city while you play (needs City Planner installed).
+- Paint, grime and dry basements were all suggested by Tayelikel.
+
 ## 1.4.1
 
 - **Wood tone:** choose how light or dark the wood is in a building's shared spaces. Wood floors, marble floors and wooden trim take the wood tone, not the colour scheme, so until now they came out light or dark by chance.

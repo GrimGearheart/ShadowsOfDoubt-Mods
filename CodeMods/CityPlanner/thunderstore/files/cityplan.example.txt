@@ -63,7 +63,8 @@ S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP
 
 # Optional: the look of shared spaces (lobby, stairwells, building bathrooms). A district letter sets its default, a tile
 # its own: scheme <colour scheme>, floor <floor>, walls <walls>, ceiling <ceiling>, style <era>, wood <colour like #5E3924>.
-# Names are the game's.
+# Names are the game's. grime 0 (spotless) to 10 (filthy) covers every interior surface of the building. Paint exact colours with floor-c1 #RRGGBB style parts (surface floor/walls/ceiling, part
+# main/c1/c2/c3); the planner shows which parts each material has.
 # [Decor]
 # D = scheme RedsGradient, floor MarbleFloor, walls DecoPanelled
 # R3 C1 = floor CarpetKubrick01, style EarlyCentury

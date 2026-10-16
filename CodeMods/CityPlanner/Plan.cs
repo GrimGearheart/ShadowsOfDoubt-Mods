@@ -282,7 +282,13 @@ internal class Plan
                 return false;
             }
             var name = t[(space + 1)..].Trim();
-            switch (t[..space].ToLowerInvariant())
+            var partName = t[..space].ToLowerInvariant();
+            if (System.Text.RegularExpressions.Regex.IsMatch(partName, "^(floor|walls|ceiling)-(main|c1|c2|c3)$"))
+            {
+                target.Paint[partName] = name;
+                continue;
+            }
+            switch (partName)
             {
                 case "scheme": case "colours": case "colors": target.Scheme = name; break;
                 case "floor": target.Floor = name; break;
@@ -290,8 +296,16 @@ internal class Plan
                 case "ceiling": target.Ceiling = name; break;
                 case "style": target.Style = name; break;
                 case "wood": target.Wood = name; break;
+                case "grime":
+                    if (!int.TryParse(name, out var grime) || grime < 0 || grime > 10)
+                    {
+                        error = "grime is a number from 0 (spotless) to 10 (filthy)";
+                        return false;
+                    }
+                    target.Grime = grime;
+                    break;
                 default:
-                    error = $"'{t[..space]}' isn't scheme, floor, walls, ceiling, style or wood";
+                    error = $"'{t[..space]}' isn't scheme, floor, walls, ceiling, style, wood or grime";
                     return false;
             }
         }

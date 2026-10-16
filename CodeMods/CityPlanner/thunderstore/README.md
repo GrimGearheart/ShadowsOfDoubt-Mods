@@ -94,6 +94,8 @@ R3 C3 = Sync Clinic, Supermarket
 The *Decor* step sets the look of a building's **shared spaces**: its lobby, stairwells, building bathrooms, atrium and (in the hotel) ballroom. They always share one look, so one choice covers them all. Click a tile and choose:
 
 - **Colours:** one of the game's colour schemes: a set of five colours, shown as swatches. Each wall, floor and ceiling takes the colours it's made for (marble walls take the middle swatch, carpets the outer ones), and the picker shows which with little dots in your scheme's colours. Some keep their own colours whatever you pick.
+- **Paint:** want exact colours? Under the floor, walls and ceiling you've picked, a colour picker for each part you can paint (marble walls: the base and the veins; a patterned carpet: two or three colours). Anything you don't paint keeps the scheme's colour. Painted colours are saved in the city, so they stay even without City Planner; furniture still follows the scheme.
+- **Grime:** tick *Override grime* and slide from spotless (0) to filthy (10). Unlike the rest of Decor, this covers **every** interior surface of the building: shared spaces, apartments and businesses. Unticked, the game decides by value, and by the residents in homes.
 - **Wood:** the wood tone, from light to dark. Wood floors (varnished, parquet, rough), marble floors and wooden trim take this instead of the colour scheme.
 - **Floor, walls and ceiling:** with the game's own pictures of each, when you open the planner from the game.
 - **Era:** Early century, Mid century, 60s–70s, 80s modern or Industrial. It also steers any floor, wall or ceiling you leave open.
@@ -107,7 +109,10 @@ In `cityplan.txt` it's a `[Decor]` section; a district letter sets its default, 
 D = scheme RedsGradient, floor MarbleFloor, walls DecoPanelled
 R3 C1 = floor CarpetKubrick01, style EarlyCentury
 R3 C2 = scheme VenetianRed-Iceburg, walls Marble, floor WoodenFloorVarnished 1, wood #5E3924
+R3 C3 = walls Marble, walls-c1 #F4F1EA, walls-c2 #3A3A3A
 ```
+
+`grime 0` to `grime 10` sets grime. Paint parts are the surface (`floor`, `walls`, `ceiling`) and the part (`main`, `c1`, `c2`, `c3`), as the planner writes them.
 
 The pictures are drawn from the game's own files on your PC the first time you start the game with this version; nothing from the game is shipped with the mod.
 
@@ -138,6 +143,7 @@ In `BepInEx/config/sodmods.cityplanner.cfg`:
 | `Wealth / GritDecorations`, `GritFreeFrom` | Which street decorations count as grit, and from which wealth level they're kept out. |
 | `Streets / OpenAlleysIn` | Districts (by planned name) where alleys become back streets. Not used when the plan paints its own streets. |
 | `Sizes / Keep` | Every city size you've planned, so cities made at those sizes still load. Filled in automatically; never remove or reorder entries. |
+| `Basements / Flooded` | The water in the lowest basements (on). Off: the water's gone in every city while you play. Needs City Planner installed; change it with the game closed. |
 | `Home / Mode` | What happens to the apartment in the plan: `Own` (your starting apartment) or `Buy` (kept empty and for sale). |
 | `Planner / Link` | Lets the planner page send plans straight to the game (on). Off: no connection is opened; copy plans into `cityplan.txt` instead. |
 | `Planner / Port` | The port the planner page uses to send plans to the game (on this PC only). Change it only if another program needs port 47811. |

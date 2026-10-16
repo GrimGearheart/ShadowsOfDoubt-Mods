@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.4.1")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.5.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -36,6 +36,7 @@ public class Plugin : BasePlugin
     internal static BepInEx.Configuration.ConfigEntry<int> PlannerPort;
     internal static BepInEx.Configuration.ConfigEntry<bool> PlannerLinkOn;
     internal static BepInEx.Configuration.ConfigEntry<Home.Mode> HomeMode;
+    internal static BepInEx.Configuration.ConfigEntry<bool> FloodedBasements;
     internal static string PlanPath => Path.Combine(Paths.ConfigPath, "cityplan.txt");
     private static DateTime planFileTime;
 
@@ -50,6 +51,8 @@ public class Plugin : BasePlugin
             "Let the planner page send plans straight to the game (through a port on this PC only, while the game runs). Off: no port is opened; the City Planner button opens the page from disk and you copy plans into cityplan.txt.");
         HomeMode = Config.Bind("Home", "Mode", CityPlanner.Home.Mode.Own,
             "The apartment in the plan's [Home] section. Own: it's the player's starting apartment (new games in the city start there, with the game's sandbox starting apartment option on). Buy: it stays empty and is listed for sale like any empty apartment. Used when a city is generated.");
+        FloodedBasements = Config.Bind("Basements", "Flooded", true,
+            "The water in the lowest basements. Off: the water is gone in every city while you play (needs City Planner installed; edit with the game closed).");
         HomeWealth = Config.Bind("Wealth", "DistrictHomeWealth", true, "Homes take their wealth mainly from their district (otherwise mostly from floor height, as in vanilla).");
         StreetWealth = Config.Bind("Wealth", "AverageStreetWealth", true, "Streets take the average wealth of the tiles they cover (vanilla: their first tile), for street decoration.");
         StreetThemes = Config.Bind("Wealth", "StreetThemes", true,

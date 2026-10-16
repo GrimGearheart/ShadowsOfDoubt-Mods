@@ -148,6 +148,19 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .dpart .dl { font: 11px var(--typed); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .dpart .dv { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .dpart .from, .dopt .from { color: var(--muted); font-size: 12px; }
+.dgrime { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel-2); font-size: 13px; }
+.dgrime .dl { font: 11px var(--typed); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: 62px; }
+.gchk { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.gslide { display: inline-flex; gap: 8px; align-items: center; flex: 1; min-width: 160px; }
+.gslide input { flex: 1; accent-color: var(--accent); }
+.gval { font-size: 12px; min-width: 92px; }
+.dgrime .gnote { flex-basis: 100%; margin: 0; font-size: 11px; }
+.dpaint { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: -2px 0 4px 8px; font-size: 12px; }
+.dpaint .dl { font: 11px var(--typed); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pc { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.pc input[type=color] { width: 30px; height: 22px; padding: 0 1px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel-2); cursor: pointer; }
+.pc button { padding: 0 5px; font-size: 11px; line-height: 16px; }
+p.dpaint { margin: -2px 0 4px 8px; }
 .uds { display: inline-flex; gap: 3px; align-items: center; }
 .uds.none { font: 10px var(--mono); color: var(--muted); }
 .ud { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--muted); display: inline-block; }
@@ -405,13 +418,16 @@ const BIZ = {
   Slum:                  { kind: "den", name: "Squat (someone lives there)" },
   EmptyDen:              { kind: "den", name: "Empty" },
 };
-const DECOR = {"schemes":[["AntiqueBronze-Ginger",["#65704A","#B28B23","#F1D4AF","#3F6548","#AB6501"]],["Artichoke-Black",["#64875B","#97B37F","#E9E8C7","#DDD0AE","#402E2F"]],["Ash-Orange",["#71523F","#83AF9B","#EDEEB9","#E7BA54","#D95B30"]],["Asparagus-BrownSugar",["#97AB66","#B4C38E","#CDE7B0","#A3BFA8","#BE6E46"]],["Asparagus-CinnamonSatin",["#97AB66","#B4C38E","#E9E8C7","#80475E","#CC5A71"]],["Asparagus-JungleGreen",["#97AB66","#607744","#BDBBB0","#3F6548","#2E3C32"]],["Asparagus-Mauve",["#97AB66","#B4C38E","#E9E8C7","#CAADAE","#A87A7C"]],["Banquette-Charlotte",["#71523F","#DD9887","#F1D4AF","#FAEDCA","#C5E0DC"]],["BathroomBlues",["#228595","#56AEBC","#F0F2EB","#D0DBD5","#93BCD1"]],["BluesGradient",["#2B4E78","#4F709C","#D0DBD5","#8FAAB0","#324A5F"]],["Brown-DarkLiver",["#BC5432","#D7A7A5","#FADDC7","#BF8254","#402E2F"]],["Cerulean-OxfordBlue",["#2B4E78","#4F709C","#BDBBB0","#9BB3CA","#2E4057"]],["CinnamonSatin-ImperialBlue",["#C16174","#80475E","#CAADAE","#BF8254","#2B4E78"]],["DarkPurple-ParkPuce",["#2F2035","#617D80","#BDBBB0","#BF9472","#4D3E39"]],["DarkSeaGreen-OldRose",["#83AF9B","#A87A7C","#CFCFAB","#7A5D65","#D7A7A5"]],["DeepSpaceSparkle-JungleGreen",["#4F709C","#AB6501","#E7B977","#772E28","#232529"]],["FuzzyWuzzy-BlackLeather",["#C47863","#BE6E46","#F1D4AF","#7A6D74","#4D3E39"]],["GreensGradient",["#CDE079","#E1EDB9","#E9E8C7","#B4C38E","#97AB66"]],["GreysGradient",["#988F76","#C8C8A9","#E9E8C7","#BDBBB0","#786A55"]],["HappyBalloons-SugarHearts",["#83AF9B","#C8C8A9","#FADDC7","#F3A4A2","#EC5C76"]],["Honey-SeeYouSoon",["#E7BA54","#E0A838","#FAEDCA","#C6D6B8","#907761"]],["HookersGreen-DarkBlueGrey",["#4A7A65","#71523F","#F0F2EB","#BDBBB0","#676596"]],["Innocence-Forever",["#DDD0AE","#988F76","#D0DBD5","#786A55","#8FAAB0"]],["Kobicha-OldLavender",["#704926","#AB6501","#DDD0AE","#BF9472","#7A6D74"]],["Liver-InternationalOrange",["#772E28","#BF8254","#FAEDCA","#E0A838","#D95B30"]],["MaximumRed-OldBurgundy",["#C82829","#E24830","#C9E7F1","#772E28","#402E2F"]],["MusiMusi-HoldingYou",["#CDE079","#E1EDB9","#F0F2EB","#E9E8C7","#E05858"]],["Nickel-Artichoke",["#71796C","#AAAB9B","#F0F2EB","#D0DBD5","#988F76"]],["Ochre-Black",["#DB7926","#E7BA54","#C8C8A9","#65704A","#232529"]],["OffWhites",["#E9E8C7","#FAEDCA","#EDEEB9","#BDBBB0","#CFCFAB"]],["PaleCerulean-DeepTaupe",["#93BCD1","#907761","#E9E8C7","#BF9472","#7A5D65"]],["RawSienna-Bistre",["#BF8254","#7A6D74","#F1D4AF","#E7B977","#402E2F"]],["RedsGradient",["#951B24","#AB2934","#FADDC7","#BE6E46","#BC5432"]],["RedState-Black",["#AB2934","#951B24","#BDBBB0","#34344A","#232529"]],["RegistrationBlack-YankeesBlue",["#232529","#182630","#CCC9DC","#324A5F","#1B2A41"]],["RussianGreen-SealBrown",["#64875B","#97AB66","#E9E8C7","#71796C","#402E2F"]],["Rust-FrenchPuce",["#BC5432","#DB7926","#E7B977","#772E28","#7A5D65"]],["SeaGreen-GiantsOrange",["#7EBC89","#CDE7B0","#FAEDCA","#E7B977","#D95B30"]],["ShadowBlue-SteelBlue",["#6F8EA3","#93BCD1","#F1D4AF","#D3B192","#4988A6"]],["SlateGrey-BurntUmber",["#6F8EA3","#907761","#DDD0AE","#C47863","#772E28"]],["Taupe-Olivine",["#49432B","#DD9D39","#F1D4AF","#BF9472","#97B37F"]],["VenetianRed-Iceburg",["#C82829","#C16174","#F0F2EB","#E9A380","#76BACF"]],["Vermillion-TuscanTan",["#C82829","#B4C38E","#D3B192","#BDBBB0","#BF8254"]],["Wenge-SteelBlue",["#4D3E39","#BC5432","#C5E0DC","#93BCD1","#4988A6"]],["WoodBrown-Liver",["#71523F","#E0A838","#E9E8C7","#64875B","#772E28"]],["YankeesBlue-Coconut",["#2B4E78","#7A6D74","#BDBBB0","#7A5D65","#402E2F"]],["YellowsGradient",["#E0A838","#E7BA54","#FAEDCA","#E7B977","#BE6E46"]]],"floor":[["Carpet","01234"],["CarpetKubrick01","01234"],["CarpetKubrick02","01234"],["CarpetOval","0134"],["CarpetTurkish","01234"],["CoatedConcrete","01234"],["ConcreteFloor",""],["ConcreteFloorLight",""],["FancyFloorTiles","01234"],["FloorTiles","01234"],["FloorTilesFloral","01234"],["FloorTilesHex","123"],["LinoPlain","2"],["LinoTilesCross","01234"],["LinoTilesDiamond","01234"],["LinoTilesLarge","01234"],["LinoTilesSmall","01234"],["LinoTilesTiny","01234"],["MarbleFloor","w"],["SpotCarpet","01234"],["WoodenFloorPainted","123"],["WoodenFloorParquet","w"],["WoodenFloorRough","w"],["WoodenFloorVarnished 1","w"]],"walls":[["BigFloralPanelled","01234w"],["BigForal","01234w"],["Deco","01234w"],["DecoCurved","01234w"],["DecoCurvedPanelled","01234w"],["DecoPanelled","01234w"],["FurDeLis","01234w"],["FurDeListPanelled","01234w"],["JazzChaos","04w"],["LargeDiamond","01234w"],["LargeDiamondPanelled","01234w"],["LightMetal",""],["Marble","12"],["MarbleTiled","12"],["MetroTiles","01234w"],["OldBrick",""],["PlainWall","01234w"],["RetroFlowers","01234"],["RetroFlowersPanelled","024w"],["Rooster","01234"],["RusticBrick",""],["SmallFloral","01234w"],["SmallFloralPanelled","01234w"],["SquareTiles","01234"],["SquareTilesHalf","01234"],["StripedWallpaper","01234w"],["StripedWallpaperPanelling","01234w"],["TartanWallpaper","01234w"],["WoodenPanelling","w"]],"ceiling":[["CeilingTiles","2"],["PlasterCeiling","2"]],"woods":["#7B6948","#A65822","#825D2E","#84573D","#8E522D","#874D48","#824E2E","#6F3522","#5E3924"],"styles":[["EarlyCentury","Early century"],["MidCentury","Mid century"],["60s70s","60s\u201370s"],["80sModern","80s modern"],["Industrial","Industrial"]]};
+const DECOR = {"schemes":[["AntiqueBronze-Ginger",["#65704A","#B28B23","#F1D4AF","#3F6548","#AB6501"]],["Artichoke-Black",["#64875B","#97B37F","#E9E8C7","#DDD0AE","#402E2F"]],["Ash-Orange",["#71523F","#83AF9B","#EDEEB9","#E7BA54","#D95B30"]],["Asparagus-BrownSugar",["#97AB66","#B4C38E","#CDE7B0","#A3BFA8","#BE6E46"]],["Asparagus-CinnamonSatin",["#97AB66","#B4C38E","#E9E8C7","#80475E","#CC5A71"]],["Asparagus-JungleGreen",["#97AB66","#607744","#BDBBB0","#3F6548","#2E3C32"]],["Asparagus-Mauve",["#97AB66","#B4C38E","#E9E8C7","#CAADAE","#A87A7C"]],["Banquette-Charlotte",["#71523F","#DD9887","#F1D4AF","#FAEDCA","#C5E0DC"]],["BathroomBlues",["#228595","#56AEBC","#F0F2EB","#D0DBD5","#93BCD1"]],["BluesGradient",["#2B4E78","#4F709C","#D0DBD5","#8FAAB0","#324A5F"]],["Brown-DarkLiver",["#BC5432","#D7A7A5","#FADDC7","#BF8254","#402E2F"]],["Cerulean-OxfordBlue",["#2B4E78","#4F709C","#BDBBB0","#9BB3CA","#2E4057"]],["CinnamonSatin-ImperialBlue",["#C16174","#80475E","#CAADAE","#BF8254","#2B4E78"]],["DarkPurple-ParkPuce",["#2F2035","#617D80","#BDBBB0","#BF9472","#4D3E39"]],["DarkSeaGreen-OldRose",["#83AF9B","#A87A7C","#CFCFAB","#7A5D65","#D7A7A5"]],["DeepSpaceSparkle-JungleGreen",["#4F709C","#AB6501","#E7B977","#772E28","#232529"]],["FuzzyWuzzy-BlackLeather",["#C47863","#BE6E46","#F1D4AF","#7A6D74","#4D3E39"]],["GreensGradient",["#CDE079","#E1EDB9","#E9E8C7","#B4C38E","#97AB66"]],["GreysGradient",["#988F76","#C8C8A9","#E9E8C7","#BDBBB0","#786A55"]],["HappyBalloons-SugarHearts",["#83AF9B","#C8C8A9","#FADDC7","#F3A4A2","#EC5C76"]],["Honey-SeeYouSoon",["#E7BA54","#E0A838","#FAEDCA","#C6D6B8","#907761"]],["HookersGreen-DarkBlueGrey",["#4A7A65","#71523F","#F0F2EB","#BDBBB0","#676596"]],["Innocence-Forever",["#DDD0AE","#988F76","#D0DBD5","#786A55","#8FAAB0"]],["Kobicha-OldLavender",["#704926","#AB6501","#DDD0AE","#BF9472","#7A6D74"]],["Liver-InternationalOrange",["#772E28","#BF8254","#FAEDCA","#E0A838","#D95B30"]],["MaximumRed-OldBurgundy",["#C82829","#E24830","#C9E7F1","#772E28","#402E2F"]],["MusiMusi-HoldingYou",["#CDE079","#E1EDB9","#F0F2EB","#E9E8C7","#E05858"]],["Nickel-Artichoke",["#71796C","#AAAB9B","#F0F2EB","#D0DBD5","#988F76"]],["Ochre-Black",["#DB7926","#E7BA54","#C8C8A9","#65704A","#232529"]],["OffWhites",["#E9E8C7","#FAEDCA","#EDEEB9","#BDBBB0","#CFCFAB"]],["PaleCerulean-DeepTaupe",["#93BCD1","#907761","#E9E8C7","#BF9472","#7A5D65"]],["RawSienna-Bistre",["#BF8254","#7A6D74","#F1D4AF","#E7B977","#402E2F"]],["RedsGradient",["#951B24","#AB2934","#FADDC7","#BE6E46","#BC5432"]],["RedState-Black",["#AB2934","#951B24","#BDBBB0","#34344A","#232529"]],["RegistrationBlack-YankeesBlue",["#232529","#182630","#CCC9DC","#324A5F","#1B2A41"]],["RussianGreen-SealBrown",["#64875B","#97AB66","#E9E8C7","#71796C","#402E2F"]],["Rust-FrenchPuce",["#BC5432","#DB7926","#E7B977","#772E28","#7A5D65"]],["SeaGreen-GiantsOrange",["#7EBC89","#CDE7B0","#FAEDCA","#E7B977","#D95B30"]],["ShadowBlue-SteelBlue",["#6F8EA3","#93BCD1","#F1D4AF","#D3B192","#4988A6"]],["SlateGrey-BurntUmber",["#6F8EA3","#907761","#DDD0AE","#C47863","#772E28"]],["Taupe-Olivine",["#49432B","#DD9D39","#F1D4AF","#BF9472","#97B37F"]],["VenetianRed-Iceburg",["#C82829","#C16174","#F0F2EB","#E9A380","#76BACF"]],["Vermillion-TuscanTan",["#C82829","#B4C38E","#D3B192","#BDBBB0","#BF8254"]],["Wenge-SteelBlue",["#4D3E39","#BC5432","#C5E0DC","#93BCD1","#4988A6"]],["WoodBrown-Liver",["#71523F","#E0A838","#E9E8C7","#64875B","#772E28"]],["YankeesBlue-Coconut",["#2B4E78","#7A6D74","#BDBBB0","#7A5D65","#402E2F"]],["YellowsGradient",["#E0A838","#E7BA54","#FAEDCA","#E7B977","#BE6E46"]]],"floor":[["Carpet","01234",[["c1",0],["c2",1]]],["CarpetKubrick01","01234",[["c1",0],["c2",1],["c3",3]]],["CarpetKubrick02","01234",[["c1",0],["c2",1],["c3",3]]],["CarpetOval","0134",[["c1",0],["c2",1],["c3",0]]],["CarpetTurkish","01234",[["c1",0],["c2",1],["c3",3]]],["CoatedConcrete","01234",[["main",0]]],["ConcreteFloor","",[]],["ConcreteFloorLight","",[]],["FancyFloorTiles","01234",[["c1",1],["c2",0],["c3",2]]],["FloorTiles","01234",[["c1",1]]],["FloorTilesFloral","01234",[["c1",1]]],["FloorTilesHex","123",[["c1",1]]],["LinoPlain","2",[["c1",2]]],["LinoTilesCross","01234",[["c1",2],["c2",0]]],["LinoTilesDiamond","01234",[["c1",2],["c2",0]]],["LinoTilesLarge","01234",[["c1",2],["c2",0]]],["LinoTilesSmall","01234",[["c1",2],["c2",0]]],["LinoTilesTiny","01234",[["c1",2],["c2",0]]],["MarbleFloor","w",[]],["SpotCarpet","01234",[["c1",0],["c2",1]]],["WoodenFloorPainted","123",[["main",1]]],["WoodenFloorParquet","w",[]],["WoodenFloorRough","w",[]],["WoodenFloorVarnished 1","w",[]]],"walls":[["BigFloralPanelled","01234w",[["c1",0],["c2",2]]],["BigForal","01234w",[["c1",2],["c2",0]]],["Deco","01234w",[["c1",2],["c2",0]]],["DecoCurved","01234w",[["c1",2],["c2",0]]],["DecoCurvedPanelled","01234w",[["c1",0],["c2",2]]],["DecoPanelled","01234w",[["c1",2],["c2",0]]],["FurDeLis","01234w",[["c1",2],["c2",0]]],["FurDeListPanelled","01234w",[["c1",2],["c2",0]]],["JazzChaos","04w",[["c1",0],["c2",4]]],["LargeDiamond","01234w",[["c1",2],["c2",0]]],["LargeDiamondPanelled","01234w",[["c1",0],["c2",2]]],["LightMetal","",[]],["Marble","12",[["c1",2],["c2",1]]],["MarbleTiled","12",[["c1",2],["c2",1]]],["MetroTiles","01234w",[["c1",0],["c2",2]]],["OldBrick","",[]],["PlainWall","01234w",[["c1",2],["c2",0]]],["RetroFlowers","01234",[["c1",2],["c2",0],["c3",1]]],["RetroFlowersPanelled","024w",[["c1",2],["c2",0]]],["Rooster","01234",[["c1",0],["c2",4],["c3",2]]],["RusticBrick","",[]],["SmallFloral","01234w",[["c1",2],["c2",0]]],["SmallFloralPanelled","01234w",[["c1",0],["c2",2]]],["SquareTiles","01234",[["c1",0],["c2",2]]],["SquareTilesHalf","01234",[["c1",0],["c2",2],["c3",1]]],["StripedWallpaper","01234w",[["c1",2],["c2",0]]],["StripedWallpaperPanelling","01234w",[["c1",2],["c2",0]]],["TartanWallpaper","01234w",[["c1",0],["c2",2]]],["WoodenPanelling","w",[]]],"ceiling":[["CeilingTiles","2",[["main",2]]],["PlasterCeiling","2",[["main",2]]]],"woods":["#7B6948","#A65822","#825D2E","#84573D","#8E522D","#874D48","#824E2E","#6F3522","#5E3924"],"styles":[["EarlyCentury","Early century"],["MidCentury","Mid century"],["60s70s","60s\u201370s"],["80sModern","80s modern"],["Industrial","Industrial"]]};
 // Decor: the game's colour schemes (five colours each) and the floors, walls and ceilings its decorating menu shows.
 // Shared spaces are a building's lobby, stairwells, building bathrooms, atrium and ballroom: they all share one look.
 const DECOR_PARTS = [["scheme", "Colours"], ["wood", "Wood"], ["floor", "Floor"], ["walls", "Walls"], ["ceiling", "Ceiling"], ["style", "Era"]];
 // Which scheme swatches (0-4, left to right) each floor, wall and ceiling takes; "w" = the wood tone.
 const USES = Object.fromEntries([...DECOR.floor, ...DECOR.walls, ...DECOR.ceiling]);
 const SWATCH = ["1st", "2nd", "middle", "4th", "5th"];
+// Paintable parts of each floor, wall and ceiling: [slot, the scheme swatch it takes unless painted].
+const PAINT = Object.fromEntries([...DECOR.floor, ...DECOR.walls, ...DECOR.ceiling].map(([n, , slots]) => [n, slots]));
+const PAINT_KEY = /^(floor|walls|ceiling)-(main|c1|c2|c3)$/;
 const SCHEME = Object.fromEntries(DECOR.schemes);
 const STYLE = Object.fromEntries(DECOR.styles);
 const words = n => n.replace(/([a-z])([A-Z0-9])/g, "$1 $2").replace(/([A-Z])([A-Z][a-z])/g, "$1 $2").replace(/\s0*(\d+)$/, " $1").toLowerCase().replace(/^./, c => c.toUpperCase());
@@ -560,9 +576,10 @@ function parseDecorLine(line, out) {
   else throw new Error("Decor line must start with a district letter or a tile like R3 C4: " + line);
   for (const part of line.slice(kv + 1).split(",").map(t => t.trim()).filter(Boolean)) {
     const sp = part.indexOf(" "), key = sp > 0 ? part.slice(0, sp).toLowerCase() : "";
-    const field = { scheme: "scheme", colours: "scheme", colors: "scheme", floor: "floor", walls: "walls", wall: "walls", ceiling: "ceiling", style: "style", wood: "wood" }[key];
+    const field = { scheme: "scheme", colours: "scheme", colors: "scheme", floor: "floor", walls: "walls", wall: "walls", ceiling: "ceiling", style: "style", wood: "wood", grime: "grime" }[key];
+    if (PAINT_KEY.test(key)) { target[key] = part.slice(sp + 1).trim(); continue; }
     if (!field) throw new Error(`Decor part "${part}" should start with scheme, wood, floor, walls, ceiling or style: ` + line);
-    target[field] = part.slice(sp + 1).trim();
+    target[field] = field === "grime" ? Math.max(0, Math.min(10, parseInt(part.slice(sp + 1), 10) || 0)) : part.slice(sp + 1).trim();
   }
 }
 
@@ -644,7 +661,9 @@ function planText() {
   const bl = [];
   state.cells.forEach((r, y) => r.forEach((c, x) => { if (c.biz?.length) bl.push(`R${y + 1} C${x + 1} = ${c.biz.join(", ")}`); }));
   if (bl.length) lines.push("", "# Businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.", "[Businesses]", ...bl);
-  const dl = [], fmt = o => DECOR_PARTS.filter(([k]) => o[k]).map(([k]) => `${k} ${o[k]}`).join(", ");
+  const dl = [], fmt = o => [...DECOR_PARTS.filter(([k]) => o[k]).map(([k]) => `${k} ${o[k]}`),
+    ...(o.grime !== undefined ? [`grime ${o.grime}`] : []),
+    ...Object.keys(o).filter(k => PAINT_KEY.test(k)).sort().map(k => `${k} ${o[k]}`)].join(", ");
   for (const [k, o] of Object.entries(state.decor?.districts || {})) if (fmt(o)) dl.push(`${k} = ${fmt(o)}`);
   for (const [k, o] of Object.entries(state.decor?.tiles || {})) { const [r, c] = k.split(","); if (fmt(o)) dl.push(`R${r} C${c} = ${fmt(o)}`); }
   if (dl.length) lines.push("", "# Shared spaces (lobby, stairwells, building bathrooms): a district letter sets its default, a tile its own.", "[Decor]", ...dl);
@@ -1005,16 +1024,54 @@ function renderDecor() {
     const mine = target[part], inherited = decorScope === "tile" && !mine ? def[part] : null, v = mine || inherited;
     const look = !v ? "" : part === "scheme" ? `<span class="sw5">${(SCHEME[v] || []).map(h => `<i style="background:${h}"></i>`).join("")}</span>`
       : part === "wood" ? `<span class="wood" style="background:${v}"></span>`
-      : part === "style" ? "" : iconImg(v, 28) + useDots(v, eff.scheme, eff.wood);
+      : part === "style" ? "" : iconImg(v, 28) + rowDots(part, v, target, decorScope === "tile" ? def : {}, eff);
     const text = v ? decorName(part, v) + (inherited ? ` <span class="from">from ${dist ? dist.name : "district"}</span>` : "") : `<span class="from">Game decides</span>`;
     return `<button type="button" class="dpart ${decorPick === part ? "on" : ""}" data-dpart="${part}"><span class="dl">${label}</span>${look}<span class="dv">${text}</span></button>`
+      + (["floor", "walls", "ceiling"].includes(part) && v ? paintLine(part, v, target, decorScope === "tile" ? def : {}, eff) : "")
       + (decorPick === part ? decorPicker(part, mine, eff) : "");
   }).join("");
   body.innerHTML = `<div class="row" style="justify-content:space-between"><h3 style="font-size:16px">Tile ${colName(x)}${y + 1}${c.b ? " · " + B[c.b].name : ""}</h3></div>
     <div class="seg" role="radiogroup" aria-label="Set for"><button type="button" data-dscope="tile" class="${decorScope === "tile" ? "on" : ""}">This building</button><button type="button" data-dscope="district" class="${decorScope === "district" ? "on" : ""}">All of ${dist ? dist.name : "this district"}</button></div>
     <p class="hint" style="margin:0">${decorScope === "district" ? `A default for every building in ${dist ? dist.name : "the district"}. A building's own choice wins over it.` : "Shared spaces of this building: lobby, stairwells, building bathrooms. Apartments and businesses keep their own look."}</p>
-    <div class="dparts">${rows}</div>
+    <div class="dparts">${rows}${grimeRow(target, decorScope === "tile" ? def : {}, dist)}</div>
     ${CAN_REACH ? "" : `<p class="hint" style="margin:0">Pictures of floors and walls show when you open the planner with the game's City Planner button.</p>`}`;
+}
+
+// Grime: left to the game (by value and residents) unless overridden, then 0 (spotless) to 10 (filthy) on every
+// interior surface of the building: shared spaces, apartments and businesses.
+const GRIME_WORDS = ["Spotless", "Spotless", "Very clean", "Clean", "Clean", "Lived in", "Lived in", "Grubby", "Grimy", "Filthy", "Filthy"];
+function grimeRow(target, inherited, dist) {
+  const mine = target.grime, from = inherited.grime, v = mine ?? from;
+  const on = mine !== undefined;
+  return `<div class="dgrime"><span class="dl">Grime</span>
+    <label class="gchk"><input type="checkbox" data-grime-on ${on ? "checked" : ""}> Override grime</label>
+    ${on ? `<span class="gslide"><input type="range" min="0" max="10" step="1" value="${mine}" data-grime aria-label="Grime"><span class="gval">${GRIME_WORDS[mine]} (${mine})</span></span>`
+      : `<span class="from">${from !== undefined ? `${GRIME_WORDS[from]} (${from}) from ${dist ? dist.name : "district"}` : "Game decides: by value, and by residents in homes"}</span>`}
+    <span class="hint gnote">Whole building: shared spaces, apartments and businesses.</span></div>`;
+}
+
+// The row's dots: the colours it will really take, painted ones included.
+function rowDots(surface, material, target, inherited, eff) {
+  const slots = PAINT[material] || [], cols = SCHEME[eff.scheme];
+  if (!slots.some(([slot]) => target[`${surface}-${slot}`] || inherited[`${surface}-${slot}`])) return useDots(material, eff.scheme, eff.wood);
+  const dots = slots.map(([slot, sw]) => {
+    const c = target[`${surface}-${slot}`] || inherited[`${surface}-${slot}`] || (cols ? cols[sw] : "");
+    return `<i class="ud" style="${c ? `background:${c}` : ""}"></i>`;
+  }).join("") + (USES[material]?.includes("w") ? `<i class="ud" style="${eff.wood ? `background:${eff.wood}` : "border-style:dashed"}"></i>` : "");
+  return `<span class="uds">${dots}</span>`;
+}
+
+// One colour picker per paintable part of the chosen material. Unpainted parts show the scheme's colour.
+function paintLine(surface, material, target, inherited, eff) {
+  const slots = PAINT[material] || [];
+  if (!slots.length) return `<p class="hint dpaint">${USES[material]?.includes("w") ? "Takes the wood tone; nothing to paint." : "Keeps its own colours; nothing to paint."}</p>`;
+  const cols = SCHEME[eff.scheme];
+  return `<div class="dpaint"><span class="dl">Paint</span>${slots.map(([slot, sw], i) => {
+    const key = `${surface}-${slot}`, mine = target[key], from = inherited[key], val = mine || from || (cols ? cols[sw] : "#9a9a9a");
+    const label = slots.length === 1 ? "Colour" : `Colour ${i + 1}`;
+    return `<label class="pc" title="${mine ? "Painted" : from ? "Painted for the whole district" : `From the scheme (its ${SWATCH[sw]} colour)`}">
+      <input type="color" data-paint="${key}" value="${val}"><span>${label}${mine ? ` <button type="button" data-unpaint="${key}" aria-label="Back to the scheme's colour">×</button>` : from ? " ·" : ""}</span></label>`;
+  }).join("")}</div>`;
 }
 
 function iconImg(name, size) {
@@ -1033,9 +1090,48 @@ function decorPicker(part, current, eff) {
     ${opts.map(([n, look]) => `<button type="button" class="dopt ${current === n ? "on" : ""}" data-dval="${n}" title="${decorName(part, n)}">${look}<span class="dn">${decorName(part, n)}</span></button>`).join("")}</div>`;
 }
 
+$("decorBody").addEventListener("input", e => {
+  if (e.target.dataset?.grime === undefined) return;
+  const v = +e.target.value, lab = e.target.parentElement.querySelector(".gval");
+  if (lab) lab.textContent = `${GRIME_WORDS[v]} (${v})`;
+});
+function decorTarget() {
+  const { x, y } = selected, c = state.cells[y][x];
+  state.decor = state.decor || { districts: {}, tiles: {} };
+  const bag = decorScope === "district" ? state.decor.districts : state.decor.tiles, key = decorScope === "district" ? c.d : `${y + 1},${x + 1}`;
+  return { bag, key, o: bag[key] = bag[key] || {} };
+}
+$("decorBody").addEventListener("change", e => {
+  if (selected && (e.target.dataset?.grimeOn !== undefined || e.target.dataset?.grime !== undefined)) {
+    const sel = selected, t = e.target;
+    change("Grime set.", () => {
+      const { bag, key, o } = decorTarget();
+      if (t.dataset.grimeOn !== undefined) { if (t.checked) o.grime = 0; else delete o.grime; }
+      else o.grime = +t.value;
+      if (!Object.keys(o).length) delete bag[key];
+    });
+    selected = sel;
+    render();
+    return;
+  }
+  const k = e.target.dataset?.paint;
+  if (!k || !selected) return;
+  const sel = selected;
+  change("Colour painted.", () => { const { o } = decorTarget(); o[k] = e.target.value.toUpperCase(); });
+  selected = sel;
+  render();
+});
 $("decorBody").addEventListener("click", e => {
   const t = e.target.closest("button");
   if (!t || !selected) return;
+  if (t.dataset.unpaint) {
+    e.preventDefault();
+    const sel = selected, k = t.dataset.unpaint;
+    change("Back to the scheme's colour.", () => { const { bag, key, o } = decorTarget(); delete o[k]; if (!Object.keys(o).length) delete bag[key]; });
+    selected = sel;
+    render();
+    return;
+  }
   if (t.dataset.dscope) { decorScope = t.dataset.dscope; decorPick = null; render(); return; }
   if (t.dataset.dpart) { decorPick = decorPick === t.dataset.dpart ? null : t.dataset.dpart; render(); return; }
   if (t.dataset.dval !== undefined && decorPick) {
@@ -1045,6 +1141,8 @@ $("decorBody").addEventListener("click", e => {
       const bag = decorScope === "district" ? state.decor.districts : state.decor.tiles, key = decorScope === "district" ? c.d : `${y + 1},${x + 1}`;
       const o = bag[key] = bag[key] || {};
       if (t.dataset.dval) o[part] = t.dataset.dval; else delete o[part];
+      // A different floor, wall or ceiling has different parts to paint, so its paint starts over.
+      if (["floor", "walls", "ceiling"].includes(part)) for (const k of Object.keys(o)) if (k.startsWith(part + "-")) delete o[k];
       if (!Object.keys(o).length) delete bag[key];
     });
     selected = { x, y };

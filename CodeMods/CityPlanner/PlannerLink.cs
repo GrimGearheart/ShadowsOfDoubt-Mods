@@ -292,6 +292,7 @@ public class PlannerPump : MonoBehaviour
         // Checked every frame: the game builds a new size list each time it returns to the main menu.
         Sizes.Ensure();
         DecorIcons.EnsureExported();
+        Basements.Tick();
         // A sent plan waits until no planned city is being built.
         UpdateGenerating();
         while (!PlannerLink.Generating && PlannerLink.TryDequeue(out var action))
