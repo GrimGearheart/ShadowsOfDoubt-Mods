@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+- **Decor:** a new *Decor* step in the planner sets the colours, floor, walls, ceiling and era of a building's shared spaces (lobby, stairwells, building bathrooms), for one building or as a default for a whole district. Pictures of each floor and wall come from the game itself. Lobbies keep what you chose instead of swapping to lino or marble on the ground floor and in stairwells. In the plan this is a `[Decor]` section. Suggested by Tayelikel.
+
 ## 1.3.0
 
 - **Choose your apartment:** pick a building and an apartment number under *Your apartment* in the planner (a `[Home]` section in the plan). With `Home / Mode` on `Own` it's your starting apartment; on `Buy` nobody moves in and it's listed for sale. Idea and first version by Tayelikel.

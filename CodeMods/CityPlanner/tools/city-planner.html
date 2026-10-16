@@ -91,7 +91,7 @@ button.on { border-color: var(--accent); color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Workflow steps: also the mode switch */
-.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 @media (max-width: 760px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .steps button { width: 100%; height: 100%; text-align: left; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 10px 12px; background: var(--panel); border-radius: 4px; }
 .steps .n { grid-row: span 2; font: 600 24px/1 var(--display); color: var(--muted); }
@@ -138,6 +138,22 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .cell .front.E { right: 3px; top: 24%; bottom: 24%; width: 4px; }
 .cell .front.W { left: 3px; top: 24%; bottom: 24%; width: 4px; }
 .cell .bz { position: absolute; bottom: 3px; right: 4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: rgba(0, 0, 0, .45); font: 600 10px/15px var(--mono); }
+.cell .dc { position: absolute; left: 3px; right: 3px; bottom: 15px; height: 4px; display: flex; border-radius: 1px; overflow: hidden; }
+.cell .dc i, .sw5 i { flex: 1; }
+.sw5 { display: inline-flex; width: 52px; height: 14px; border-radius: 2px; overflow: hidden; border: 1px solid var(--line); vertical-align: middle; }
+.sw5.big { width: 100%; height: 22px; }
+.dparts { display: grid; gap: 6px; }
+.dpart { display: grid; grid-template-columns: 62px auto minmax(0, 1fr); gap: 8px; align-items: center; text-align: left; padding: 6px 8px; }
+.dpart.on { border-color: var(--accent); }
+.dpart .dl { font: 11px var(--typed); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.dpart .dv { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dpart .from, .dopt .from { color: var(--muted); font-size: 12px; }
+.dicon { border-radius: 2px; display: block; object-fit: cover; }
+.dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; max-height: 340px; overflow: auto; padding: 4px 0; }
+.dgrid.wide { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.dopt { display: grid; justify-items: center; gap: 3px; padding: 5px; font-size: 11px; line-height: 1.2; }
+.dopt.on { border-color: var(--accent); color: var(--accent); }
+.dopt .dn { text-align: center; }
 .cell .hm { position: absolute; top: 2px; left: 4px; font-size: 13px; line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 .bz-list { display: grid; gap: 12px; }
 .bzgroup { display: grid; gap: 5px; }
@@ -234,7 +250,8 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
     <li><button id="modePaint" type="button" role="radio" aria-checked="false"><span class="n">1</span><span class="t">Districts</span><span class="d">Paint where each district goes</span></button></li>
     <li><button id="modePick" type="button" role="radio" aria-checked="true" class="on"><span class="n">2</span><span class="t">Buildings</span><span class="d">Pick buildings, or leave them to the game</span></button></li>
     <li><button id="modeStreets" type="button" role="radio" aria-checked="false"><span class="n">3</span><span class="t">Streets</span><span class="d">Optional: main roads, back streets, alleys</span></button></li>
-    <li><button id="stepSend" type="button"><span class="n">4</span><span class="t">Send to game</span><span class="d">Then pick "Planned city" on New Game</span></button></li>
+    <li><button id="modeDecor" type="button" role="radio" aria-checked="false"><span class="n">4</span><span class="t">Decor</span><span class="d">Optional: colours, floors and walls of shared spaces</span></button></li>
+    <li><button id="stepSend" type="button"><span class="n">5</span><span class="t">Send to game</span><span class="d">Then pick "Planned city" on New Game</span></button></li>
   </ol>
 
   <div class="toolbar" role="toolbar" aria-label="City settings">
@@ -265,6 +282,10 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
     </section>
 
     <aside class="rail">
+      <section id="decorCard" class="card" aria-label="Decor" hidden>
+        <span class="tab">DECOR</span>
+        <div id="decorBody"></div>
+      </section>
       <section class="card" aria-label="Summary">
         <span class="tab">SUMMARY</span>
         <div id="stats" class="stats"></div>
@@ -377,6 +398,14 @@ const BIZ = {
   Slum:                  { kind: "den", name: "Squat (someone lives there)" },
   EmptyDen:              { kind: "den", name: "Empty" },
 };
+const DECOR = {"schemes":[["AntiqueBronze-Ginger",["#65704A","#B28B23","#F1D4AF","#3F6548","#AB6501"]],["Artichoke-Black",["#64875B","#97B37F","#E9E8C7","#DDD0AE","#402E2F"]],["Ash-Orange",["#71523F","#83AF9B","#EDEEB9","#E7BA54","#D95B30"]],["Asparagus-BrownSugar",["#97AB66","#B4C38E","#CDE7B0","#A3BFA8","#BE6E46"]],["Asparagus-CinnamonSatin",["#97AB66","#B4C38E","#E9E8C7","#80475E","#CC5A71"]],["Asparagus-JungleGreen",["#97AB66","#607744","#BDBBB0","#3F6548","#2E3C32"]],["Asparagus-Mauve",["#97AB66","#B4C38E","#E9E8C7","#CAADAE","#A87A7C"]],["Banquette-Charlotte",["#71523F","#DD9887","#F1D4AF","#FAEDCA","#C5E0DC"]],["BathroomBlues",["#228595","#56AEBC","#F0F2EB","#D0DBD5","#93BCD1"]],["BluesGradient",["#2B4E78","#4F709C","#D0DBD5","#8FAAB0","#324A5F"]],["Brown-DarkLiver",["#BC5432","#D7A7A5","#FADDC7","#BF8254","#402E2F"]],["Cerulean-OxfordBlue",["#2B4E78","#4F709C","#BDBBB0","#9BB3CA","#2E4057"]],["CinnamonSatin-ImperialBlue",["#C16174","#80475E","#CAADAE","#BF8254","#2B4E78"]],["DarkPurple-ParkPuce",["#2F2035","#617D80","#BDBBB0","#BF9472","#4D3E39"]],["DarkSeaGreen-OldRose",["#83AF9B","#A87A7C","#CFCFAB","#7A5D65","#D7A7A5"]],["DeepSpaceSparkle-JungleGreen",["#4F709C","#AB6501","#E7B977","#772E28","#232529"]],["FuzzyWuzzy-BlackLeather",["#C47863","#BE6E46","#F1D4AF","#7A6D74","#4D3E39"]],["GreensGradient",["#CDE079","#E1EDB9","#E9E8C7","#B4C38E","#97AB66"]],["GreysGradient",["#988F76","#C8C8A9","#E9E8C7","#BDBBB0","#786A55"]],["HappyBalloons-SugarHearts",["#83AF9B","#C8C8A9","#FADDC7","#F3A4A2","#EC5C76"]],["Honey-SeeYouSoon",["#E7BA54","#E0A838","#FAEDCA","#C6D6B8","#907761"]],["HookersGreen-DarkBlueGrey",["#4A7A65","#71523F","#F0F2EB","#BDBBB0","#676596"]],["Innocence-Forever",["#DDD0AE","#988F76","#D0DBD5","#786A55","#8FAAB0"]],["Kobicha-OldLavender",["#704926","#AB6501","#DDD0AE","#BF9472","#7A6D74"]],["Liver-InternationalOrange",["#772E28","#BF8254","#FAEDCA","#E0A838","#D95B30"]],["MaximumRed-OldBurgundy",["#C82829","#E24830","#C9E7F1","#772E28","#402E2F"]],["MusiMusi-HoldingYou",["#CDE079","#E1EDB9","#F0F2EB","#E9E8C7","#E05858"]],["Nickel-Artichoke",["#71796C","#AAAB9B","#F0F2EB","#D0DBD5","#988F76"]],["Ochre-Black",["#DB7926","#E7BA54","#C8C8A9","#65704A","#232529"]],["OffWhites",["#E9E8C7","#FAEDCA","#EDEEB9","#BDBBB0","#CFCFAB"]],["PaleCerulean-DeepTaupe",["#93BCD1","#907761","#E9E8C7","#BF9472","#7A5D65"]],["RawSienna-Bistre",["#BF8254","#7A6D74","#F1D4AF","#E7B977","#402E2F"]],["RedsGradient",["#951B24","#AB2934","#FADDC7","#BE6E46","#BC5432"]],["RedState-Black",["#AB2934","#951B24","#BDBBB0","#34344A","#232529"]],["RegistrationBlack-YankeesBlue",["#232529","#182630","#CCC9DC","#324A5F","#1B2A41"]],["RussianGreen-SealBrown",["#64875B","#97AB66","#E9E8C7","#71796C","#402E2F"]],["Rust-FrenchPuce",["#BC5432","#DB7926","#E7B977","#772E28","#7A5D65"]],["SeaGreen-GiantsOrange",["#7EBC89","#CDE7B0","#FAEDCA","#E7B977","#D95B30"]],["ShadowBlue-SteelBlue",["#6F8EA3","#93BCD1","#F1D4AF","#D3B192","#4988A6"]],["SlateGrey-BurntUmber",["#6F8EA3","#907761","#DDD0AE","#C47863","#772E28"]],["Taupe-Olivine",["#49432B","#DD9D39","#F1D4AF","#BF9472","#97B37F"]],["VenetianRed-Iceburg",["#C82829","#C16174","#F0F2EB","#E9A380","#76BACF"]],["Vermillion-TuscanTan",["#C82829","#B4C38E","#D3B192","#BDBBB0","#BF8254"]],["Wenge-SteelBlue",["#4D3E39","#BC5432","#C5E0DC","#93BCD1","#4988A6"]],["WoodBrown-Liver",["#71523F","#E0A838","#E9E8C7","#64875B","#772E28"]],["YankeesBlue-Coconut",["#2B4E78","#7A6D74","#BDBBB0","#7A5D65","#402E2F"]],["YellowsGradient",["#E0A838","#E7BA54","#FAEDCA","#E7B977","#BE6E46"]]],"floor":["Carpet","CarpetKubrick01","CarpetKubrick02","CarpetOval","CarpetTurkish","CoatedConcrete","ConcreteFloor","ConcreteFloorLight","FancyFloorTiles","FloorTiles","FloorTilesFloral","FloorTilesHex","LinoPlain","LinoTilesCross","LinoTilesDiamond","LinoTilesLarge","LinoTilesSmall","LinoTilesTiny","MarbleFloor","SpotCarpet","WoodenFloorPainted","WoodenFloorParquet","WoodenFloorRough","WoodenFloorVarnished 1"],"walls":["BigFloralPanelled","BigForal","Deco","DecoCurved","DecoCurvedPanelled","DecoPanelled","FurDeLis","FurDeListPanelled","JazzChaos","LargeDiamond","LargeDiamondPanelled","LightMetal","Marble","MarbleTiled","MetroTiles","OldBrick","PlainWall","RetroFlowers","RetroFlowersPanelled","Rooster","RusticBrick","SmallFloral","SmallFloralPanelled","SquareTiles","SquareTilesHalf","StripedWallpaper","StripedWallpaperPanelling","TartanWallpaper","WoodenPanelling"],"ceiling":["CeilingTiles","PlasterCeiling"],"styles":[["EarlyCentury","Early century"],["MidCentury","Mid century"],["60s70s","60s\u201370s"],["80sModern","80s modern"],["Industrial","Industrial"]]};
+// Decor: the game's colour schemes (five colours each) and the floors, walls and ceilings its decorating menu shows.
+// Shared spaces are a building's lobby, stairwells, building bathrooms, atrium and ballroom: they all share one look.
+const DECOR_PARTS = [["scheme", "Colours"], ["floor", "Floor"], ["walls", "Walls"], ["ceiling", "Ceiling"], ["style", "Era"]];
+const SCHEME = Object.fromEntries(DECOR.schemes);
+const STYLE = Object.fromEntries(DECOR.styles);
+const words = n => n.replace(/([a-z])([A-Z0-9])/g, "$1 $2").replace(/([A-Z])([A-Z][a-z])/g, "$1 $2").replace(/\s0*(\d+)$/, " $1").toLowerCase().replace(/^./, c => c.toUpperCase());
+const decorName = (part, v) => part === "scheme" ? v.split("-").map(words).join(" / ") : part === "style" ? (STYLE[v] || v) : words(v);
 const CATS = ["Civic", "Towers", "Homes", "Commerce", "Industry", "Green"];
 const PEOPLE_PER_HOME = 1.81; // citizens per home at population 1.0 (1,296 citizens in 952 homes at 0.75)
 const COLOURS = ["#c2483d", "#d9a43a", "#7d55c7", "#8a7560", "#5f6b75", "#cf5aa0", "#3f7fd6", "#3a9a7a", "#b8662f", "#4b8f9e", "#9c4f6b", "#6c8c3a"];
@@ -418,6 +447,7 @@ function parsePlan(text) {
   const out = { w: 0, h: 0, pop: 1, districts: [], cells: [], streets: {} };
   const streetLines = [], bizLines = [];
   let homeLine = null;
+  const decorLines = [];
   const codes = {};
   let section = "";
   for (const raw of text.split(/\r?\n/)) {
@@ -445,6 +475,8 @@ function parsePlan(text) {
       streetLines.push(line);
     } else if (section === "businesses") {
       bizLines.push(line);
+    } else if (section === "decor") {
+      decorLines.push(line);
     } else if (section === "home") {
       homeLine = line;
     } else if (section === "map") {
@@ -464,6 +496,7 @@ function parsePlan(text) {
   out.cells.forEach((r, i) => { if (r.length !== out.w - 2) throw new Error(`Map row ${i + 1} has ${r.length} cells; it needs ${out.w - 2}.`); });
   for (const line of streetLines) parseStreetLine(line, out);
   for (const line of bizLines) parseBizLine(line, out);
+  for (const line of decorLines) parseDecorLine(line, out);
   if (homeLine) {
     const m = homeLine.match(/^Apartment\s*=\s*R(\d+)\s+C(\d+)\s+(\d+)$/i);
     if (!m) throw new Error("Home line needs 'Apartment = R<row> C<column> <number>': " + homeLine);
@@ -492,6 +525,24 @@ function parseStreetLine(line, out) {
     const sides = side === "EDGE" ? [r === rows[0] && "N", r === rows[1] && "S", c === cols[0] && "W", c === cols[1] && "E"]
       : side === "INSIDE" ? [r < rows[1] && "S", c < cols[1] && "E"] : [side];
     for (const sd of sides) if (sd) out.streets[SIDE_KEY[sd](r, c)] = kind;
+  }
+}
+
+// "D = scheme RedsGradient, floor MarbleFloor" (a district's default) or "R3 C4 = walls DecoPanelled" (a tile).
+function parseDecorLine(line, out) {
+  const kv = line.indexOf("=");
+  if (kv < 0) throw new Error("Decor line needs '=': " + line);
+  const sel = line.slice(0, kv).trim(), m = sel.toUpperCase().match(/^R(\d+)\s+C(\d+)$/);
+  out.decor = out.decor || { districts: {}, tiles: {} };
+  let target;
+  if (m) target = out.decor.tiles[`${+m[1]},${+m[2]}`] = out.decor.tiles[`${+m[1]},${+m[2]}`] || {};
+  else if (sel.length === 1 && out.districts.some(d => d.key === sel)) target = out.decor.districts[sel] = out.decor.districts[sel] || {};
+  else throw new Error("Decor line must start with a district letter or a tile like R3 C4: " + line);
+  for (const part of line.slice(kv + 1).split(",").map(t => t.trim()).filter(Boolean)) {
+    const sp = part.indexOf(" "), key = sp > 0 ? part.slice(0, sp).toLowerCase() : "";
+    const field = { scheme: "scheme", colours: "scheme", colors: "scheme", floor: "floor", walls: "walls", wall: "walls", ceiling: "ceiling", style: "style" }[key];
+    if (!field) throw new Error(`Decor part "${part}" should start with scheme, floor, walls, ceiling or style: ` + line);
+    target[field] = part.slice(sp + 1).trim();
   }
 }
 
@@ -573,6 +624,10 @@ function planText() {
   const bl = [];
   state.cells.forEach((r, y) => r.forEach((c, x) => { if (c.biz?.length) bl.push(`R${y + 1} C${x + 1} = ${c.biz.join(", ")}`); }));
   if (bl.length) lines.push("", "# Businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.", "[Businesses]", ...bl);
+  const dl = [], fmt = o => DECOR_PARTS.filter(([k]) => o[k]).map(([k]) => `${k} ${o[k]}`).join(", ");
+  for (const [k, o] of Object.entries(state.decor?.districts || {})) if (fmt(o)) dl.push(`${k} = ${fmt(o)}`);
+  for (const [k, o] of Object.entries(state.decor?.tiles || {})) { const [r, c] = k.split(","); if (fmt(o)) dl.push(`R${r} C${c} = ${fmt(o)}`); }
+  if (dl.length) lines.push("", "# Shared spaces (lobby, stairwells, building bathrooms): a district letter sets its default, a tile its own.", "[Decor]", ...dl);
   if (state.home) lines.push("", "# Your apartment: tile and the number on its door. City Planner's Home / Mode setting: Own or Buy.", "[Home]",
     `Apartment = R${state.home.row} C${state.home.col} ${state.home.number}`);
   return lines.join("\n") + "\n";
@@ -784,7 +839,8 @@ function render() {
       el.style.background = dist ? dist.colour : "#777";
       el.innerHTML = `<span class="code">${B[c.b].short}</span><span class="fl">${B[c.b].floors}F</span><span class="dk">${c.d}</span>` + (c.f ? `<span class="front ${c.f}"></span>` : "")
         + (c.biz?.length ? `<span class="bz" aria-hidden="true">${c.biz.length}</span>` : "")
-        + (state.home && state.home.row === y + 1 && state.home.col === x + 1 ? `<span class="hm" title="Your apartment">⌂</span>` : "");
+        + (state.home && state.home.row === y + 1 && state.home.col === x + 1 ? `<span class="hm" title="Your apartment">⌂</span>` : "")
+        + decorStrip(x, y);
     }
     el.setAttribute("aria-label", `${colName(x)}${y + 1}: ${c.b ? B[c.b].name : "building chosen by the game"}${dist ? ", " + dist.name : ""}${c.f ? ", front " + c.f : ""}${c.biz?.length ? ", businesses: " + c.biz.map(k => BIZ[k].name).join(", ") : ""}`);
     el.title = `${c.b ? B[c.b].name : "Game decides"}${dist ? " · " + dist.name : ""}${c.f ? " · front " + c.f : ""}${c.biz?.length ? "\n" + c.biz.map(k => BIZ[k].name).join(", ") : ""}`;
@@ -810,6 +866,7 @@ function render() {
   $("banner").hidden = !bd;
   if (bd) { $("banner").style.background = bd.colour; $("banner").innerHTML = `<span>Painting: ${bd.name}</span><button type="button">Done painting</button>`; }
   renderDistricts();
+  if (decorMode) renderDecor();
   if (document.activeElement !== $("homeTile") && document.activeElement !== $("homeUnit")) {
     $("homeTile").value = state.home ? `${colName(state.home.col - 1)}${state.home.row}` : "";
     $("homeUnit").value = state.home ? state.home.number : "";
@@ -905,6 +962,71 @@ $("pop").addEventListener("change", e => {
   openPop(+pop.dataset.x, +pop.dataset.y, anchor);
 });
 
+// A thin strip of the tile's colour scheme along its bottom edge, so decor shows on the map.
+function decorStrip(x, y) {
+  const own = state.decor?.tiles?.[`${y + 1},${x + 1}`], dist = state.decor?.districts?.[state.cells[y][x].d];
+  const scheme = own?.scheme || dist?.scheme, any = (own && Object.keys(own).length) || (dist && Object.keys(dist).length);
+  if (!any) return "";
+  const cols = scheme && SCHEME[scheme] ? SCHEME[scheme] : ["#888", "#aaa", "#ccc", "#aaa", "#888"];
+  return `<span class="dc" aria-hidden="true">${cols.map(c => `<i style="background:${c}"></i>`).join("")}</span>`;
+}
+
+function renderDecor() {
+  const body = $("decorBody");
+  if (!selected) { body.innerHTML = `<p class="hint" style="margin:0">Click a tile on the map. Its shared spaces (lobby, stairwells, building bathrooms) all share one look: colours, floor, walls, ceiling and era. Set a tile's own, or a default for its whole district.</p>`; return; }
+  const { x, y } = selected, c = state.cells[y][x], dist = districtOf(c.d);
+  const key = `${y + 1},${x + 1}`;
+  state.decor = state.decor || { districts: {}, tiles: {} };
+  const own = state.decor.tiles[key] || {}, def = state.decor.districts[c.d] || {};
+  const target = decorScope === "district" ? def : own;
+  const rows = DECOR_PARTS.map(([part, label]) => {
+    const mine = target[part], inherited = decorScope === "tile" && !mine ? def[part] : null, v = mine || inherited;
+    const look = !v ? "" : part === "scheme" ? `<span class="sw5">${(SCHEME[v] || []).map(h => `<i style="background:${h}"></i>`).join("")}</span>`
+      : part === "style" ? "" : iconImg(v, 28);
+    const text = v ? decorName(part, v) + (inherited ? ` <span class="from">from ${dist ? dist.name : "district"}</span>` : "") : `<span class="from">Game decides</span>`;
+    return `<button type="button" class="dpart ${decorPick === part ? "on" : ""}" data-dpart="${part}"><span class="dl">${label}</span>${look}<span class="dv">${text}</span></button>`
+      + (decorPick === part ? decorPicker(part, mine) : "");
+  }).join("");
+  body.innerHTML = `<div class="row" style="justify-content:space-between"><h3 style="font-size:16px">Tile ${colName(x)}${y + 1}${c.b ? " · " + B[c.b].name : ""}</h3></div>
+    <div class="seg" role="radiogroup" aria-label="Set for"><button type="button" data-dscope="tile" class="${decorScope === "tile" ? "on" : ""}">This building</button><button type="button" data-dscope="district" class="${decorScope === "district" ? "on" : ""}">All of ${dist ? dist.name : "this district"}</button></div>
+    <p class="hint" style="margin:0">${decorScope === "district" ? `A default for every building in ${dist ? dist.name : "the district"}. A building's own choice wins over it.` : "Shared spaces of this building: lobby, stairwells, building bathrooms. Apartments and businesses keep their own look."}</p>
+    <div class="dparts">${rows}</div>
+    ${CAN_REACH ? "" : `<p class="hint" style="margin:0">Pictures of floors and walls show when you open the planner with the game's City Planner button.</p>`}`;
+}
+
+function iconImg(name, size) {
+  return CAN_REACH ? `<img class="dicon" src="${GAME}/decor/icons/${encodeURIComponent(name)}.png" alt="" width="${size}" height="${size}" onerror="this.style.visibility='hidden'">` : "";
+}
+
+function decorPicker(part, current) {
+  const opts = part === "scheme" ? DECOR.schemes.map(([n, cols]) => [n, `<span class="sw5 big">${cols.map(h => `<i style="background:${h}"></i>`).join("")}</span>`])
+    : part === "style" ? DECOR.styles.map(([n]) => [n, ""])
+    : DECOR[part].map(n => [n, iconImg(n, 56)]);
+  return `<div class="dgrid ${part === "scheme" || part === "style" ? "wide" : ""}">
+    <button type="button" class="dopt ${!current ? "on" : ""}" data-dval=""><span class="dn">${decorScope === "district" ? "Game decides" : "No own choice"}</span></button>
+    ${opts.map(([n, look]) => `<button type="button" class="dopt ${current === n ? "on" : ""}" data-dval="${n}" title="${decorName(part, n)}">${look}<span class="dn">${decorName(part, n)}</span></button>`).join("")}</div>`;
+}
+
+$("decorBody").addEventListener("click", e => {
+  const t = e.target.closest("button");
+  if (!t || !selected) return;
+  if (t.dataset.dscope) { decorScope = t.dataset.dscope; decorPick = null; render(); return; }
+  if (t.dataset.dpart) { decorPick = decorPick === t.dataset.dpart ? null : t.dataset.dpart; render(); return; }
+  if (t.dataset.dval !== undefined && decorPick) {
+    const part = decorPick, { x, y } = selected, c = state.cells[y][x];
+    change(t.dataset.dval ? `${DECOR_PARTS.find(p => p[0] === part)[1]} set.` : "Choice cleared.", () => {
+      state.decor = state.decor || { districts: {}, tiles: {} };
+      const bag = decorScope === "district" ? state.decor.districts : state.decor.tiles, key = decorScope === "district" ? c.d : `${y + 1},${x + 1}`;
+      const o = bag[key] = bag[key] || {};
+      if (t.dataset.dval) o[part] = t.dataset.dval; else delete o[part];
+      if (!Object.keys(o).length) delete bag[key];
+    });
+    selected = { x, y };
+    decorPick = null;
+    render();
+  }
+});
+
 function closePop() { const pop = $("pop"); pop.hidden = true; delete pop.dataset.x; delete pop.dataset.y; selected = null; render(); }
 
 $("pop").addEventListener("click", e => {
@@ -954,6 +1076,7 @@ grid.addEventListener("pointerdown", e => {
   if (!el) return;
   const x = +el.dataset.x, y = +el.dataset.y;
   if (paintMode && brush) { painting = true; state.cells[y][x].d = brush; render(); return; }
+  if (decorMode) { selected = { x, y }; decorPick = null; render(); return; }
   if (!$("pop").hidden && selected && selected.x === x && selected.y === y) { closePop(); return; }
   openPop(x, y, el);
 });
@@ -993,25 +1116,33 @@ grid.addEventListener("keydown", e => {
   if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPop(+el.dataset.x, +el.dataset.y, el); }
 });
 
-function setMode(paint, streets = false) {
+let decorMode = false, decorPick = null, decorScope = "tile";
+function setMode(paint, streets = false, decor = false) {
   paintMode = paint;
   streetMode = streets;
+  decorMode = decor;
+  $("modeDecor").classList.toggle("on", decorMode);
+  $("modeDecor").setAttribute("aria-checked", decorMode);
+  $("decorCard").hidden = !decorMode;
+  if (decorMode && !$("pop").hidden) $("pop").hidden = true;
   $("modeStreets").classList.toggle("on", streetMode);
   $("modeStreets").setAttribute("aria-checked", streetMode);
   $("streetBrush").hidden = !streetMode;
   if (paintMode && !brush) brush = state.districts[0]?.key || null;
   if (paintMode && !$("pop").hidden) { $("pop").hidden = true; selected = null; }
-  $("modePick").classList.toggle("on", !paintMode && !streetMode);
+  $("modePick").classList.toggle("on", !paintMode && !streetMode && !decorMode);
   $("modePaint").classList.toggle("on", paintMode);
-  $("modePick").setAttribute("aria-checked", !paintMode && !streetMode);
+  $("modePick").setAttribute("aria-checked", !paintMode && !streetMode && !decorMode);
   $("modePaint").setAttribute("aria-checked", paintMode);
   $("modeHint").textContent = streetMode ? "Click or drag along the strips between tiles; a drag stays on one road. Right-click a strip to clear it. Buildings face the busiest street beside them unless you set a front."
+    : decorMode ? "Click a tile to choose the look of its shared spaces (lobby, stairwells, building bathrooms), or set a default for its whole district."
     : paintMode ? "Drag across tiles to paint them. Pick a colour in the Districts panel to change brush." : "Click a tile to choose its building, district, front and the businesses inside. Right-click a tile to let the game decide.";
   render();
 }
 $("modePick").addEventListener("click", () => setMode(false));
 $("modePaint").addEventListener("click", () => setMode(true));
 $("modeStreets").addEventListener("click", () => setMode(false, true));
+$("modeDecor").addEventListener("click", () => setMode(false, false, true));
 $("streetBrush").addEventListener("click", e => {
   const t = e.target.closest("button[data-st]");
   if (!t) return;
@@ -1067,6 +1198,7 @@ function resize(w, h) {
   }
   state.w = w; state.h = h; state.cells = cells;
   if (state.home && (state.home.row > h - 2 || state.home.col > w - 2)) delete state.home;
+  for (const k of Object.keys(state.decor?.tiles || {})) { const [r, c] = k.split(",").map(Number); if (r > h - 2 || c > w - 2) delete state.decor.tiles[k]; }
   for (const key of Object.keys(state.streets || {})) {
     const [, t, b, n] = key.match(/^([hv])(\d+),(\d+)$/);
     const ok = t === "h" ? +b <= h - 2 && +n <= w - 2 : +b <= w - 2 && +n <= h - 2;

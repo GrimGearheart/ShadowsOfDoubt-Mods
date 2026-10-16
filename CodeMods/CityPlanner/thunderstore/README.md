@@ -17,6 +17,7 @@ City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-do
 - **Buildings (optional):** which building goes on each tile, and which side its front faces. Tiles left on *game decides* get a building the game picks for that district.
 - **Businesses (optional):** choose what goes in a building's shop units: the bar on the corner, the pharmacy next door, the gambling den in the basement. Units you leave alone are filled by the game.
 - **Your apartment (optional):** pick the apartment you live in, or the one waiting for you to buy.
+- **Decor (optional):** the colours, floor, walls, ceiling and era of each building's shared spaces, building by building or as a default for a whole district.
 - **Streets (optional):** paint any gap between two tiles as a main road, back street or alley. Gaps you leave alone are decided by the game.
 
 The plan also changes how wealth works in your city:
@@ -87,6 +88,26 @@ In `cityplan.txt` the businesses are a `[Businesses]` section, one line per tile
 R5 C1 = Bar, Pharmacy, Gambling Den
 R3 C3 = Sync Clinic, Supermarket
 ```
+
+## Decor
+
+The *Decor* step sets the look of a building's **shared spaces**: its lobby, stairwells, building bathrooms, atrium and (in the hotel) ballroom. They always share one look, so one choice covers them all. Click a tile and choose:
+
+- **Colours:** one of the game's colour schemes, shown as swatches.
+- **Floor, walls and ceiling:** with the game's own pictures of each, when you open the planner from the game.
+- **Era:** Early century, Mid century, 60s–70s, 80s modern or Industrial. It also steers any floor, wall or ceiling you leave open.
+
+Choose for **this building**, or for **all of its district** at once. A building's own choice wins over its district's, and anything you leave open is up to the game. Lobbies normally swap to lino, concrete or marble on the ground floor and in stairwells; whatever you choose stays put. The top floors of the big towers keep their own luxury look. Apartments and businesses keep their own look too.
+
+In `cityplan.txt` it's a `[Decor]` section; a district letter sets its default, a tile its own:
+
+```
+[Decor]
+D = scheme RedsGradient, floor MarbleFloor, walls DecoPanelled
+R3 C1 = floor CarpetKubrick01, style EarlyCentury
+```
+
+The pictures are drawn from the game's own files on your PC the first time you start the game with this version; nothing from the game is shipped with the mod.
 
 ## Your apartment
 

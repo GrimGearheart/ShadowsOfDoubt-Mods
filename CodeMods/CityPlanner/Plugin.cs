@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.3.0")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.4.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -756,6 +756,7 @@ internal static class GenerateTimer
     private static void Prefix()
     {
         StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = StagePatch.BusinessesDone = StagePatch.HomeDone = StagePatch.HomeFinished = false;
+        Decor.Reset();
         Home.Restore();
         Businesses.Planned.Clear();
         AddressWealthPatch.Count = 0;

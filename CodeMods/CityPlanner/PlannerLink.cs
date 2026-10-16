@@ -142,6 +142,15 @@ internal static class PlannerLink
                     else Respond(stream, 404, "text/plain", "city-planner.html wasn't found in the City Planner mod folder. Reinstall the mod.");
                     return;
                 }
+                if (method == "GET" && path.StartsWith("/decor/icons/"))
+                {
+                    // Material pictures drawn from the game's own files on this PC (see DecorIcons); harmless, so no token
+                    // (an <img> can't send one). The file name is cleaned, so a request can't leave the icons folder.
+                    var file = Path.Combine(DecorIcons.Dir, DecorIcons.FileName(Path.GetFileNameWithoutExtension(Uri.UnescapeDataString(path["/decor/icons/".Length..]))));
+                    if (File.Exists(file)) RespondBytes(stream, 200, "image/png", File.ReadAllBytes(file));
+                    else Respond(stream, 404, "text/plain", "Not found");
+                    return;
+                }
                 if (!headers.TryGetValue("x-planner-token", out var sent) ||
                     !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(sent), Encoding.ASCII.GetBytes(token)))
                 {
@@ -246,9 +255,11 @@ internal static class PlannerLink
     /// <summary>Where the served page gets this session's token (the copy on disk keeps an empty one).</summary>
     private const string TokenSlot = "/*PLANNER_TOKEN*/\"\"";
 
-    private static void Respond(NetworkStream stream, int code, string type, string content)
+    private static void Respond(NetworkStream stream, int code, string type, string content) =>
+        RespondBytes(stream, code, type, Encoding.UTF8.GetBytes(content));
+
+    private static void RespondBytes(NetworkStream stream, int code, string type, byte[] bytes)
     {
-        var bytes = Encoding.UTF8.GetBytes(content);
         var reason = code switch { 200 => "OK", 403 => "Forbidden", _ => "Not Found" };
         // No CORS headers: only the page the game serves (same origin) can read answers. Never shown inside another page.
         var head = $"HTTP/1.1 {code} {reason}\r\nContent-Type: {type}\r\nContent-Length: {bytes.Length}\r\nCache-Control: no-store\r\nConnection: close\r\n" +
@@ -280,6 +291,7 @@ public class PlannerPump : MonoBehaviour
         // city by size slot, and without the slot it looks for a 5 x 5 city and reports missing city data.
         // Checked every frame: the game builds a new size list each time it returns to the main menu.
         Sizes.Ensure();
+        DecorIcons.EnsureExported();
         // A sent plan waits until no planned city is being built.
         UpdateGenerating();
         while (!PlannerLink.Generating && PlannerLink.TryDequeue(out var action))

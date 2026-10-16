@@ -57,6 +57,10 @@ internal class Plan
     /// <summary>The player's apartment, or null.</summary>
     public PlannedHome Home;
 
+    /// <summary>Shared-space decor from the [Decor] section: district defaults (by district letter) and tiles.</summary>
+    public readonly Dictionary<char, DecorChoice> DistrictDecor = new();
+    public readonly Dictionary<(int x, int y), DecorChoice> TileDecor = new();
+
     public static Plan Load(string path, out string error)
     {
         error = null;
@@ -78,6 +82,7 @@ internal class Plan
         var streetLines = new List<string>();
         var businessLines = new List<string>();
         string homeLine = null;
+        var decorLines = new List<string>();
         var section = "";
         foreach (var raw in lines)
         {
@@ -137,6 +142,9 @@ internal class Plan
                     break;
                 case "home":
                     homeLine = line;
+                    break;
+                case "decor":
+                    decorLines.Add(line);
                     break;
             }
         }
@@ -214,6 +222,14 @@ internal class Plan
             error = $"[Home] '{homeLine}': {error}";
             return null;
         }
+        foreach (var line in decorLines)
+        {
+            if (!plan.ParseDecorLine(line, out error))
+            {
+                error = $"[Decor] '{line}': {error}";
+                return null;
+            }
+        }
         foreach (var line in businessLines)
         {
             if (!plan.ParseBusinessLine(line, out error))
@@ -223,6 +239,62 @@ internal class Plan
             }
         }
         return plan;
+    }
+
+    /// <summary>
+    /// A [Decor] line: a district letter (its default) or a tile "R3 C4" = comma-separated "part name" pairs, where the
+    /// part is scheme, floor, walls, ceiling or style and the name is the game's, e.g.
+    /// "D = scheme RedsGradient, floor MarbleFloor" or "R3 C4 = walls DecoPanelled". Later lines add to earlier ones.
+    /// </summary>
+    private bool ParseDecorLine(string line, out string error)
+    {
+        error = null;
+        var (selector, value) = KeyValue(line);
+        DecorChoice target;
+        if (selector.Length == 1 && Districts.ContainsKey(selector[0]))
+        {
+            if (!DistrictDecor.TryGetValue(selector[0], out target)) DistrictDecor[selector[0]] = target = new DecorChoice();
+        }
+        else
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(selector, @"^R(\d+)\s+C(\d+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (!m.Success)
+            {
+                error = "start with a district letter or a tile like R3 C4";
+                return false;
+            }
+            int row = int.Parse(m.Groups[1].Value), col = int.Parse(m.Groups[2].Value);
+            if (row < 1 || row > Height - 2 || col < 1 || col > Width - 2)
+            {
+                error = $"needs a tile inside the map (R1-R{Height - 2} C1-C{Width - 2})";
+                return false;
+            }
+            var key = (col, Height - 1 - row);
+            if (!TileDecor.TryGetValue(key, out target)) TileDecor[key] = target = new DecorChoice();
+        }
+        foreach (var part in value.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var t = part.Trim();
+            var space = t.IndexOf(' ');
+            if (space < 0)
+            {
+                error = $"'{t}' needs a part and a name, like 'floor MarbleFloor'";
+                return false;
+            }
+            var name = t[(space + 1)..].Trim();
+            switch (t[..space].ToLowerInvariant())
+            {
+                case "scheme": case "colours": case "colors": target.Scheme = name; break;
+                case "floor": target.Floor = name; break;
+                case "walls": case "wall": target.Walls = name; break;
+                case "ceiling": target.Ceiling = name; break;
+                case "style": target.Style = name; break;
+                default:
+                    error = $"'{t[..space]}' isn't scheme, floor, walls, ceiling or style";
+                    return false;
+            }
+        }
+        return true;
     }
 
     /// <summary>"Apartment = R3 C4 1701": the player's apartment, by tile and the number on its door.</summary>

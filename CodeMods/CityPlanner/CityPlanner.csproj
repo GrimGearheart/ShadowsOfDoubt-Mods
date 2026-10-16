@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>CityPlanner</AssemblyName>
     <RootNamespace>CityPlanner</RootNamespace>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -22,6 +22,7 @@
     <Reference Include="$(BepInExDir)\interop\Il2Cppmscorlib.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.CoreModule.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.InputLegacyModule.dll" Private="false" />
+    <Reference Include="$(BepInExDir)\interop\UnityEngine.ImageConversionModule.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.PhysicsModule.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Unity.TextMeshPro.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Il2CppSystem.Core.dll" Private="false" />
