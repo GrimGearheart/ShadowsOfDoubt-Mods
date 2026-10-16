@@ -54,6 +54,9 @@ internal class Plan
     /// <summary>Painted gaps from the [Streets] section. Empty = the game lays out the streets itself.</summary>
     public readonly Dictionary<Gap, StreetKind> Streets = new();
 
+    /// <summary>Painted alleys with a dead-end wall across the middle ("= deadend" in [Streets]).</summary>
+    public readonly HashSet<Gap> DeadEnds = new();
+
     /// <summary>The player's apartment, or null.</summary>
     public PlannedHome Home;
 
@@ -396,13 +399,15 @@ internal class Plan
         error = null;
         var (selector, value) = KeyValue(line);
         StreetKind kind;
+        var deadEnd = false;
         switch (value.ToLowerInvariant())
         {
             case "main": case "street": case "road": kind = StreetKind.Main; break;
             case "back": case "backstreet": case "back street": kind = StreetKind.Back; break;
             case "alley": kind = StreetKind.Alley; break;
+            case "deadend": case "dead end": case "dead-end": kind = StreetKind.Alley; deadEnd = true; break;
             default:
-                error = "the type must be main, back or alley";
+                error = "the type must be main, back, alley or deadend";
                 return false;
         }
         (int, int)? rowRange = null, colRange = null;
@@ -441,7 +446,13 @@ internal class Plan
                 _ => new[] { side },
             };
             foreach (var s in sides)
-                if (s != null) Streets[GapBeside(r, c, s)] = kind;
+            {
+                if (s == null) continue;
+                var gap = GapBeside(r, c, s);
+                Streets[gap] = kind;
+                if (deadEnd) DeadEnds.Add(gap);
+                else DeadEnds.Remove(gap);
+            }
         }
         return true;
     }

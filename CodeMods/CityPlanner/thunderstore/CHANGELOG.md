@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- **Dead ends:** a new *Dead end* brush in *Streets* paints an alley with a wall across its middle, so each half is a dead end, like the game's own walled-off alleys. One strip is enough. In the plan it's `= deadend`. Suggested by Tayelikel.
+
 ## 1.5.0
 
 - **Paint your own colours:** under the floor, walls and ceiling you've chosen in *Decor*, a colour picker for each part you can paint (marble walls get base and veins, carpets two or three colours). Unpainted parts keep the scheme's colours. Painted colours are saved in the city itself, so they stay even without City Planner.

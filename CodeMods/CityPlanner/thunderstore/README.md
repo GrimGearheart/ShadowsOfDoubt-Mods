@@ -44,6 +44,7 @@ Every pair of neighbouring buildings has a road between them; you choose what ki
 - **Main road:** a named street. Main roads run straight and change name where they cross another main road.
 - **Back street:** a quiet lane.
 - **Alley:** a narrow-feeling lane with alley dressing. Alleys that touch become one alley, so no dead-end walls split them.
+- **Dead end:** an alley with a wall across its middle, so each half is a dead end. One strip is enough. Walls only ever go between alleys, so an alley can't be walled off right where it opens onto a street.
 
 Buildings turn to face the busiest street beside them, and shops prefer busy streets, so a painted main road gets the frontages and the businesses. A front you set on a tile always wins.
 
@@ -54,6 +55,7 @@ In `cityplan.txt` the streets are a `[Streets]` section, counted like the map (r
 R3 C1-C7 S = main          # the south side of row 3, columns 1 to 7
 R5-R7 C1-C3 edge = main    # all the way round a 3 x 3 block
 R5-R7 C1-C3 inside = back  # the lanes inside it
+R6 C1 E = deadend          # an alley walled off in the middle
 ```
 
 The gaps can't be added, removed or narrowed: every road is as wide as the game makes it. Without a `[Streets]` section, the game lays out all streets itself.

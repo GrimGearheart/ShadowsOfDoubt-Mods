@@ -118,7 +118,12 @@ button.on { border-color: var(--accent); color: var(--accent); }
 .grid { display: grid; gap: 0; width: max-content; user-select: none; touch-action: none; }
 .gap.main, .jn.main { background: var(--st-main); }
 .gap.back, .jn.back { background: var(--st-back); }
-.gap.alley, .jn.alley { background: repeating-linear-gradient(45deg, var(--st-alley) 0 4px, transparent 4px 7px); }
+.gap.alley, .jn.alley, .gap.deadend { background: repeating-linear-gradient(45deg, var(--st-alley) 0 4px, transparent 4px 7px); }
+/* Dead end: an alley with a wall across its middle. */
+.gap.deadend { position: relative; }
+.gap.deadend::after { content: ""; position: absolute; background: var(--stamp); border-radius: 1px; }
+.gap.deadend.dv::after { left: -2px; right: -2px; top: calc(50% - 2px); height: 4px; }
+.gap.deadend.dh::after { top: -2px; bottom: -2px; left: calc(50% - 2px); width: 4px; }
 .streets .gap.can { cursor: crosshair; }
 .streets .gap.can:not(.main):not(.back):not(.alley) { background: var(--line); opacity: .6; }
 .streets .gap.can:hover { box-shadow: inset 0 0 0 2px var(--accent); }
@@ -190,6 +195,7 @@ p.dpaint { margin: -2px 0 4px 8px; }
 .swatchline { display: inline-block; width: 22px; height: 8px; border-radius: 1px; vertical-align: middle; margin-right: 5px; border: 1px solid var(--line); }
 .sw-main { background: var(--st-main); } .sw-back { background: var(--st-back); }
 .sw-alley { background: repeating-linear-gradient(45deg, var(--st-alley) 0 4px, transparent 4px 7px); }
+.sw-deadend { background: linear-gradient(90deg, transparent 45%, var(--stamp) 45% 55%, transparent 55%), repeating-linear-gradient(45deg, var(--st-alley) 0 4px, transparent 4px 7px); }
 .banner { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 3px; color: #fff; font-weight: 600; margin-bottom: 12px; }
 .banner button { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.5); color: #fff; }
 
@@ -282,6 +288,7 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
       <button type="button" data-st="main" class="on"><span class="swatchline sw-main"></span>Main road</button>
       <button type="button" data-st="back"><span class="swatchline sw-back"></span>Back street</button>
       <button type="button" data-st="alley"><span class="swatchline sw-alley"></span>Alley</button>
+      <button type="button" data-st="deadend" title="An alley with a dead-end wall across the middle"><span class="swatchline sw-deadend"></span>Dead end</button>
       <button type="button" data-st=""><span class="swatchline"></span>Game decides</button>
     </div>
     <span class="spacer"></span>
@@ -297,7 +304,7 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
       <div class="legend">
         <span>Blue ring = the waterfront, built by the game around the blocks you plan.</span>
         <span>Small number = floors. Bar on a tile edge = the building's front. Round badge = businesses you chose inside. ? = the game picks a building that suits the district.</span>
-        <span>Strips between tiles are streets: <span class="swatchline sw-main"></span>main road <span class="swatchline sw-back"></span>back street <span class="swatchline sw-alley"></span>alley. Blank = the game decides by foot traffic.</span>
+        <span>Strips between tiles are streets: <span class="swatchline sw-main"></span>main road <span class="swatchline sw-back"></span>back street <span class="swatchline sw-alley"></span>alley <span class="swatchline sw-deadend"></span>dead end (an alley walled off in the middle). Blank = the game decides by foot traffic.</span>
       </div>
     </section>
 
@@ -544,8 +551,8 @@ function parsePlan(text) {
 // "R3 C1-C7 S = main", "R5-R7 C1-C3 edge = main", "R5-R7 C1-C3 inside = back" (same rules as City Planner).
 function parseStreetLine(line, out) {
   const kv = line.indexOf("=");
-  const kind = { main: "main", street: "main", road: "main", back: "back", backstreet: "back", alley: "alley" }[line.slice(kv + 1).trim().toLowerCase()];
-  if (kv < 0 || !kind) throw new Error("Street line needs '= main', '= back' or '= alley': " + line);
+  const kind = { main: "main", street: "main", road: "main", back: "back", backstreet: "back", alley: "alley", deadend: "deadend", "dead end": "deadend", "dead-end": "deadend" }[line.slice(kv + 1).trim().toLowerCase()];
+  if (kv < 0 || !kind) throw new Error("Street line needs '= main', '= back', '= alley' or '= deadend': " + line);
   let rows, cols, side;
   for (const tok of line.slice(0, kv).trim().split(/\s+/)) {
     const t = tok.toUpperCase(), m = t.match(/^([RC])(\d+)(?:-[RC]?(\d+))?$/);
@@ -835,7 +842,7 @@ function render() {
       g.style.gridRow = 2 * Y + 1; g.style.gridColumn = 2 * X + 2;
       if (inside(X, Y) || inside(X + 1, Y)) {
         const key = `v${X},${Y}`;
-        g.dataset.gap = key; g.classList.add("can"); if (st[key]) g.classList.add(st[key]);
+        g.dataset.gap = key; g.classList.add("can"); if (st[key]) g.classList.add(st[key], key[0] === "v" ? "dv" : "dh");
       }
       grid.appendChild(g);
     }
@@ -845,7 +852,7 @@ function render() {
       g.style.gridRow = 2 * Y + 2; g.style.gridColumn = 2 * X + 1;
       if (inside(X, Y) || inside(X, Y + 1)) {
         const key = `h${Y},${X}`;
-        g.dataset.gap = key; g.classList.add("can"); if (st[key]) g.classList.add(st[key]);
+        g.dataset.gap = key; g.classList.add("can"); if (st[key]) g.classList.add(st[key], key[0] === "v" ? "dv" : "dh");
       }
       grid.appendChild(g);
     }
@@ -854,7 +861,7 @@ function render() {
       j.className = "jn";
       j.style.gridRow = 2 * Y + 2; j.style.gridColumn = 2 * X + 2;
       const around = [st[`v${X},${Y}`], st[`v${X},${Y + 1}`], st[`h${Y},${X}`], st[`h${Y},${X + 1}`]];
-      const top = ["main", "back", "alley"].find(k => around.includes(k));
+      const top = ["main", "back", "alley"].find(k => around.includes(k) || (k === "alley" && around.includes("deadend")));
       if (top) j.classList.add(top);
       grid.appendChild(j);
     }

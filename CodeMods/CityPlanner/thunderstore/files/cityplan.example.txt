@@ -53,6 +53,7 @@ S:CP S:MI S:CP R:HO/N A:DI/N A:MI A:CP
 # R3 C1-C7 S = main
 # R5-R7 C1-C3 edge = main
 # R5-R7 C1-C3 inside = back
+# R6 C1 E = deadend          (an alley with a wall across its middle)
 
 # Optional: the businesses in a tile's building, each in a free unit of its kind. Units not listed: the game decides.
 # Eatery units: Bar, Fast Food, Chinese Eatery. Shop units: Pharmacy, Launderette, Hardware Store, Pawn Shop,

@@ -25,6 +25,12 @@ internal static class StreetsPatch
     private class Piece
     {
         public PathFinder.StreetChunk Chunk;
+        /// <summary>Dead-end halves only: the half's own tiles (the rest of the gap belongs to the other half).</summary>
+        public List<NewTile> Tiles;
+        /// <summary>Dead-end gaps: the half at the low end (south or west) and the half at the high end.</summary>
+        public Piece Low, High;
+        /// <summary>Dead-end halves: the other half (they must never end up in the same alley).</summary>
+        public Piece Sibling;
         public bool Junction;
         public Gap Gap;            // gaps only
         public int CornerX, CornerY; // junctions only: the tile at the crossing's south-west
@@ -106,6 +112,26 @@ internal static class StreetsPatch
             if (!piece.Painted) piece.Kind = Auto(piece.Chunk);
         }
         foreach (var piece in loose) piece.Kind = Auto(piece.Chunk);
+        // Dead ends: the alley's tiles are split at the middle into two halves that become separate alleys, so the game
+        // builds its dead-end wall where they meet.
+        var deadEnds = 0;
+        foreach (var piece in gaps.Values)
+        {
+            if (!plan.DeadEnds.Contains(piece.Gap) || piece.Kind != StreetKind.Alley || piece.Chunk.allTiles.Count < 2) continue;
+            var tiles = new List<NewTile>();
+            for (var t = 0; t < piece.Chunk.allTiles.Count; t++) tiles.Add(piece.Chunk.allTiles[t]);
+            var vertical = piece.Gap.Vertical;
+            int Along(NewTile t) => vertical ? t.globalTileCoord.y : t.globalTileCoord.x;
+            int lo = tiles.Min(Along), hi = tiles.Max(Along);
+            if (hi == lo) continue;
+            var mid = (lo + hi + 1) / 2;
+            piece.Low = new Piece { Chunk = piece.Chunk, Gap = piece.Gap, Kind = StreetKind.Alley, Painted = true, Tiles = tiles.Where(t => Along(t) < mid).ToList() };
+            piece.High = new Piece { Chunk = piece.Chunk, Gap = piece.Gap, Kind = StreetKind.Alley, Painted = true, Tiles = tiles.Where(t => Along(t) >= mid).ToList() };
+            Plugin.Logger.LogInfo($"Dead end: gap {piece.Gap}, split at {(vertical ? "y" : "x")} = {mid} ({piece.Low.Tiles.Count} + {piece.High.Tiles.Count} tiles)");
+            piece.Low.Sibling = piece.High;
+            piece.High.Sibling = piece.Low;
+            deadEnds++;
+        }
         foreach (var j in junctions.Values)
         {
             var around = Around(j, gaps).Where(p => p != null).ToList();
@@ -138,7 +164,9 @@ internal static class StreetsPatch
                 }
             }
         }
-        foreach (var start in gaps.Values.Concat(junctions.Values).Where(p => p.Kind == StreetKind.Alley && p.Group == null))
+        // Dead-end gaps take part as their two halves.
+        var alleyPieces = gaps.Values.SelectMany(p => p.Low != null ? new[] { p.Low, p.High } : new[] { p }).Concat(junctions.Values).ToList();
+        foreach (var start in alleyPieces.Where(p => p.Kind == StreetKind.Alley && p.Group == null))
         {
             var group = new List<Piece>();
             var queue = new Queue<Piece>();
@@ -149,7 +177,8 @@ internal static class StreetsPatch
                 var p = queue.Dequeue();
                 group.Add(p);
                 foreach (var n in Neighbours(p, gaps, junctions))
-                    if (n != null && n.Group == null && n.Kind == StreetKind.Alley)
+                    // A dead-end half never joins the alley its other half is in (an alley loop), or the wall would vanish.
+                    if (n != null && n.Group == null && n.Kind == StreetKind.Alley && (n.Sibling == null || n.Sibling.Group != group))
                     {
                         n.Group = group;
                         queue.Enqueue(n);
@@ -158,7 +187,7 @@ internal static class StreetsPatch
             groups.Add(group);
         }
         // Anything left over (a crossing whose roads both ended, an unrecognised piece) becomes a street of its own.
-        foreach (var p in gaps.Values.Concat(junctions.Values).Concat(loose).Where(p => p.Group == null))
+        foreach (var p in gaps.Values.Where(p => p.Low == null).Concat(junctions.Values).Concat(loose).Where(p => p.Group == null))
         {
             p.Group = new List<Piece> { p };
             groups.Add(p.Group);
@@ -178,7 +207,8 @@ internal static class StreetsPatch
             var footfall = 0f;
             foreach (var p in group)
             {
-                for (var t = 0; t < p.Chunk.allTiles.Count; t++) street.AddTile(p.Chunk.allTiles[t]);
+                if (p.Tiles != null) foreach (var tile in p.Tiles) street.AddTile(tile);
+                else for (var t = 0; t < p.Chunk.allTiles.Count; t++) street.AddTile(p.Chunk.allTiles[t]);
                 street.AddChunk(p.Chunk);
                 street.chunkSize++;
                 footfall = Mathf.Max(footfall, p.Chunk.footfallNormalized);
@@ -205,7 +235,8 @@ internal static class StreetsPatch
         var painted = gaps.Values.Count(p => p.Painted);
         Plugin.Logger.LogInfo($"Painted streets: {painted} of {gaps.Count} gaps painted, {junctions.Count} crossings; " +
                               $"{counts.GetValueOrDefault(StreetKind.Main)} main streets, {counts.GetValueOrDefault(StreetKind.Back)} back streets, " +
-                              $"{counts.GetValueOrDefault(StreetKind.Alley)} alleys" + (loose.Count > 0 ? $", {loose.Count} unrecognised pieces" : ""));
+                              $"{counts.GetValueOrDefault(StreetKind.Alley)} alleys" + (deadEnds > 0 ? $", {deadEnds} dead ends" : "") +
+                              (loose.Count > 0 ? $", {loose.Count} unrecognised pieces" : ""));
     }
 
     private static StreetKind Auto(PathFinder.StreetChunk chunk) =>
@@ -224,14 +255,29 @@ internal static class StreetsPatch
         yield return Get(gaps, new Gap(false, j.CornerX + 1, j.CornerY));
     }
 
+    /// <summary>
+    /// What touches a crossing when alleys are joined up: like Around, but a dead-end gap gives only the half at this
+    /// crossing's end (the crossing is at the high end of the gaps to its south and west, the low end of the others).
+    /// </summary>
+    private static IEnumerable<Piece> Touching(Piece j, Dictionary<Gap, Piece> gaps)
+    {
+        Piece End(Piece p, bool high) => p?.Low == null ? p : high ? p.High : p.Low;
+        yield return End(Get(gaps, new Gap(true, j.CornerX, j.CornerY)), true);
+        yield return End(Get(gaps, new Gap(true, j.CornerX, j.CornerY + 1)), false);
+        yield return End(Get(gaps, new Gap(false, j.CornerX, j.CornerY)), true);
+        yield return End(Get(gaps, new Gap(false, j.CornerX + 1, j.CornerY)), false);
+    }
+
     private static IEnumerable<Piece> Neighbours(Piece p, Dictionary<Gap, Piece> gaps, Dictionary<(int, int), Piece> junctions)
     {
-        if (p.Junction) return Around(p, gaps);
+        if (p.Junction) return Touching(p, gaps);
         var g = p.Gap;
         // A north–south gap (X, Y) has crossings at its south (X, Y-1) and north (X, Y) ends; east–west likewise.
-        return g.Vertical
-            ? new[] { Get(junctions, (g.X, g.Y - 1)), Get(junctions, (g.X, g.Y)) }
-            : new[] { Get(junctions, (g.X - 1, g.Y)), Get(junctions, (g.X, g.Y)) };
+        var low = g.Vertical ? Get(junctions, (g.X, g.Y - 1)) : Get(junctions, (g.X - 1, g.Y));
+        var high = Get(junctions, (g.X, g.Y));
+        // A dead-end half only reaches the crossing at its own end.
+        if (p.Tiles != null) return new[] { ReferenceEquals(p, Get(gaps, g)?.Low) ? low : high };
+        return new[] { low, high };
     }
 
     /// <summary>How many gaps of one type run unbroken along a road through a crossing (to pick who gets it).</summary>
