@@ -8,13 +8,14 @@ using UnityEngine;
 namespace LaserFix;
 
 /// <summary>
-/// Laser Fix: security camera lasers and laser grids stop at window glass. The game measures a laser with the same
-/// "what can a person see?" ray that citizens use, which deliberately ignores the Transparent layer that window glass
-/// is on, so beams shone straight through windows and out into the street. After the game sizes a beam, it's checked
-/// for window glass along its length and, if it meets some, the drawn beam and its glow end there. Only the drawing
+/// Laser Fix: security camera lasers and laser grids stay inside. The game measures a laser with the same "what can a
+/// person see?" ray that citizens use, which deliberately ignores the Transparent layer that window glass is on, so
+/// beams shone straight through windows and out into the street. After the game sizes a beam it is checked twice:
+/// for window glass along it, and for the point where it would leave the building (some windows, like stained-glass
+/// panels, have nothing a ray can hit). The drawn beam and its glow end at whichever comes first. Only the drawing
 /// changes: what the laser detects (and whether it trips the alarm) is exactly as before.
 /// </summary>
-[BepInPlugin("sodmods.laserfix", "Laser Fix", "1.0.0")]
+[BepInPlugin("sodmods.laserfix", "Laser Fix", "1.0.1")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -29,20 +30,56 @@ public class Plugin : BasePlugin
         Log.LogInfo($"Laser Fix loaded (window glass on layer {(layer >= 0 ? layer : 25)})");
     }
 
-    /// <summary>Ends a beam at the first window glass along it. The beam runs from its origin along its forward.</summary>
+    private const float Step = 0.25f;
+
+    /// <summary>
+    /// Ends a beam at the first window glass along it, or where it would leave the building, whichever is nearer. The
+    /// beam runs from its origin along its forward.
+    /// </summary>
     internal static void StopAtGlass(Transform beam, Transform origin, Light glow)
     {
         if (beam == null || origin == null) return;
         var length = beam.lossyScale.z;
         if (length <= 0.05f) return;
-        if (!Physics.Raycast(new Ray(origin.position, origin.forward), out var hit, length, glassMask, QueryTriggerInteraction.Collide)) return;
-        if (!IsGlass(hit.transform)) return;
+        var from = origin.position;
+        var dir = origin.forward;
+        var end = length;
+        if (Physics.Raycast(new Ray(from, dir), out var hit, length, glassMask, QueryTriggerInteraction.Collide) && IsGlass(hit.transform))
+            end = hit.distance;
+        // Lasers inside a building never reach the street: walk the beam and stop where it would step outside.
+        if (IsOutside(from) == false)
+        {
+            for (var d = Step; d < end; d += Step)
+            {
+                if (IsOutside(from + dir * d) != true) continue;
+                // Narrow down to the wall between the last inside point and this one.
+                float inside = d - Step, outside = d;
+                for (var i = 0; i < 6; i++)
+                {
+                    var m = (inside + outside) * 0.5f;
+                    if (IsOutside(from + dir * m) == true) outside = m;
+                    else inside = m;
+                }
+                end = Mathf.Min(end, inside);
+                break;
+            }
+        }
+        if (end >= length - 0.01f) return;
         // Same way the game sizes it: scale while detached, so the length is in world units.
         var parent = beam.parent;
         beam.parent = null;
-        beam.localScale = new Vector3(beam.localScale.x, beam.localScale.y, hit.distance);
+        beam.localScale = new Vector3(beam.localScale.x, beam.localScale.y, end);
         beam.parent = parent;
-        if (glow != null) glow.range = hit.distance;
+        if (glow != null) glow.range = end;
+    }
+
+    /// <summary>Whether a point is outdoors (a street, alley or rooftop), from the game's own map; null if it's off the map.</summary>
+    internal static bool? IsOutside(Vector3 position)
+    {
+        var map = PathFinder.Instance?.nodeMap;
+        if (map == null || CityData.Instance == null) return null;
+        if (!map.TryGetValue(CityData.Instance.RealPosToNodeInt(position), out var node) || node?.gameLocation == null) return null;
+        return node.gameLocation.isOutside;
     }
 
     /// <summary>Window glass only: other see-through things on the same layer are left alone.</summary>

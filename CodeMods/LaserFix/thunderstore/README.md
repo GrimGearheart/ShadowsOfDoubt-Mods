@@ -3,12 +3,12 @@
 In the base game, security camera lasers shine straight through windows. Walk down the street past a guarded apartment and you'll see a red beam poking out through the glass and across the pavement.
 
 **With this mod:**
-- **Lasers stop at window glass.** Camera lasers and laser grids end where they meet a window, and so does their glow.
+- **Lasers stay indoors.** Camera lasers and laser grids end at the window glass, or at the wall if they'd slip out through a gap the glass doesn't cover (like the stained-glass panels above shop windows). Their glow ends there too.
 - **Nothing else changes.** Cameras see and detect exactly what they did before. Only where the beam is drawn changes.
 
 ## Why it happens
 
-The game works out a laser's length with the same "what can a person see?" check that citizens use, and that check deliberately looks through glass so people can see through windows. So the beam went through too.
+The game works out a laser's length with the same "what can a person see?" check that citizens use, and that check deliberately looks through glass so people can see through windows. So the beam went through too. Some windows, like stained-glass panels, have nothing the check can hit at all, so the mod also uses the game's own map of what's indoors and outdoors and ends the beam where it would step outside.
 
 ## Safe to remove?
 

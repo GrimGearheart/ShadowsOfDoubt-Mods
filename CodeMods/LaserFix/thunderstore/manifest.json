@@ -1,8 +1,8 @@
 {
   "name": "LaserFix",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/GrimGearheart/ShadowsOfDoubt-Mods/tree/main/CodeMods/LaserFix",
-  "description": "Security camera lasers stop at window glass instead of shining out into the street. Only the beam changes; cameras detect exactly what they did before.",
+  "description": "Security camera lasers stay indoors: they stop at window glass (and stained glass) instead of shining out into the street. Only the beam changes; cameras detect exactly what they did before.",
   "dependencies": [
     "BepInEx-BepInExPack_IL2CPP-6.0.755"
   ]
