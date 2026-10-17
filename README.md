@@ -13,6 +13,7 @@ Source code for The Protectorate's [Shadows of Doubt](https://store.steampowered
 | [Sanitation Department](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/SanitationDepartment/) | Get paid to clean the streets and crime scenes | [CodeMods/SanitationDepartment](CodeMods/SanitationDepartment) |
 | [City Planner](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/CityPlanner/) | Design your own city in a planner that sends it to the game: paint districts, or choose every building and street | [CodeMods/CityPlanner](CodeMods/CityPlanner) |
 | [Margin City](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/MarginCity/) | A hand-planned city, built with City Planner | [Cities/MarginCity](Cities/MarginCity) |
+| [Laser Fix](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/LaserFix/) | Security camera lasers stop at window glass | [CodeMods/LaserFix](CodeMods/LaserFix) |
 | [Under New Management](https://thunderstore.io/c/shadows-of-doubt/p/The_Protectorate/UnderNewManagement/) | Buy and run diners, cafés and bars | [CodeMods/Proprietor](CodeMods/Proprietor) |
 
 `CodeMods/Shared` holds code used by more than one mod (the credentials card on the pause screen). `Cities/` holds city packs: content only, no code, loaded by City Planner. City Planner's planner page and city scripts are in `CodeMods/CityPlanner/tools`.
@@ -21,7 +22,7 @@ Source code for The Protectorate's [Shadows of Doubt](https://store.steampowered
 
 - **No internet access, nothing outside the game.** The mods patch the game's own code while it runs (BepInEx + Harmony) and write small text files next to your save games. They don't touch the save files themselves. The one exception is City Planner's *Send to game*: the planner page in your browser hands plans to the game over a connection that only works on your own PC, only while the game runs.
 - **Readable.** The released DLLs aren't obfuscated. Open one in [ILSpy](https://github.com/icsharpcode/ILSpy) and compare it with the source here, or scan the download on [VirusTotal](https://www.virustotal.com/).
-- **Removable.** Each mod's page has a "Safe to remove?" section. All of them can be removed without breaking saves, except that saves made in Margin City need Margin City to load.
+- **Removable.** Each mod's page has a "Safe to remove?" section. All of them can be removed without breaking saves, including cities made with City Planner and Margin City.
 
 ## Building
 

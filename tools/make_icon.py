@@ -236,9 +236,30 @@ def planner():
     return img
 
 
+def laser():
+    img, d = base("LASER FIX")
+    # A window frame; a red beam from the left stops dead at the glass.
+    wx0, wy0, wx1, wy1 = 560, 330, 860, 840
+    d.rectangle([wx0, wy0, wx1, wy1], fill="#1d2a3a", outline=TEXT, width=18)
+    d.line([(wx0 + wx1) // 2, wy0, (wx0 + wx1) // 2, wy1], fill=TEXT, width=12)
+    d.line([wx0, (wy0 + wy1) // 2, wx1, (wy0 + wy1) // 2], fill=TEXT, width=12)
+    for k in range(3):  # glass glints
+        x = wx0 + 50 + k * 30
+        d.line([x, wy0 + 40, x + 60, wy0 + 100], fill=DIM, width=8)
+    cy = 600
+    # Camera on the left
+    d.rounded_rectangle([130, cy - 70, 300, cy + 40], radius=18, fill=RING, outline=TEXT, width=10)
+    d.ellipse([270, cy - 45, 330, cy + 15], fill=BG, outline=TEXT, width=8)
+    # Beam, glowing, ending at the glass
+    d.line([330, cy - 15, wx0 - 4, cy - 15], fill="#7a1f1f", width=40)
+    d.line([330, cy - 15, wx0 - 4, cy - 15], fill="#e5483d", width=16)
+    d.ellipse([wx0 - 30, cy - 45, wx0 + 30, cy + 15], fill="#e5483d")
+    return img
+
+
 if __name__ == "__main__":
     kind, out = sys.argv[1], sys.argv[2]
     img = {"squint": squint, "license": license_, "mantle": mantle, "prone": prone, "sanitation": sanitation, "city": city,
-           "management": management, "sit": sit, "planner": planner}[kind]()
+           "management": management, "sit": sit, "planner": planner, "laser": laser}[kind]()
     img.resize((256, 256), Image.LANCZOS).save(out)
     print("wrote", out)
