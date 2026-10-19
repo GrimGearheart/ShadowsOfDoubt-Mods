@@ -46,6 +46,8 @@ internal class Plan
 {
     public int Width, Height;
     public float Population = 1f;
+    /// <summary>Whether towers get their Echelon top floors ([City] Echelons = off to build them as ordinary floors).</summary>
+    public bool Echelons = true;
     public readonly Dictionary<char, PlannedDistrict> Districts = new();
 
     /// <summary>Interior tiles by city coordinate (x 1..Width-2 west to east, y 1..Height-2 south to north).</summary>
@@ -110,6 +112,10 @@ internal class Plan
                     else if (k.Equals("Population", StringComparison.OrdinalIgnoreCase))
                     {
                         float.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out plan.Population);
+                    }
+                    else if (k.Equals("Echelons", StringComparison.OrdinalIgnoreCase))
+                    {
+                        plan.Echelons = !(v.Equals("off", StringComparison.OrdinalIgnoreCase) || v.Equals("false", StringComparison.OrdinalIgnoreCase) || v.Equals("no", StringComparison.OrdinalIgnoreCase));
                     }
                     break;
                 }

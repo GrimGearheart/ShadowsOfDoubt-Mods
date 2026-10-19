@@ -18,7 +18,7 @@ namespace CityPlanner;
 /// size dropdown when generating a new city; the game still generates streets, interiors and residents.
 /// Optionally it also sets the streets and the businesses in each building.
 /// </summary>
-[BepInPlugin("sodmods.cityplanner", "City Planner", "1.6.0")]
+[BepInPlugin("sodmods.cityplanner", "City Planner", "1.7.0")]
 public class Plugin : BasePlugin
 {
     internal static ManualLogSource Logger;
@@ -108,7 +108,7 @@ public class Plugin : BasePlugin
         Sizes.Remember(plan.Width, plan.Height);
         Sizes.RefreshDropdown();
         Logger.LogInfo($"City plan {how}: {plan.Width}x{plan.Height}, {plan.Districts.Count} districts, population x{plan.Population}" +
-                       (plan.Streets.Count > 0 ? $", {plan.Streets.Count} painted streets" : "") +
+                       (plan.Streets.Count > 0 ? $", {plan.Streets.Count} painted streets" : "") + (plan.Echelons ? "" : ", no Echelon floors") +
                        (plan.Tiles.Values.Any(t => t.Businesses.Count > 0) ? $", {plan.Tiles.Values.Sum(t => t.Businesses.Count)} planned businesses" : ""));
     }
 
@@ -395,6 +395,7 @@ internal static class StagePatch
 
     private static void Prefix(CityConstructor __instance)
     {
+        Echelons.Tick(__instance);
         if (__instance.loadingOperationActive || !Plugin.Active) return;
         if (__instance.loadState == CityConstructor.LoadState.generateBlocks && !DistrictsDone)
         {
@@ -760,6 +761,7 @@ internal static class GenerateTimer
     {
         StagePatch.DistrictsDone = StagePatch.BuildingsDone = StagePatch.SortDone = StagePatch.AlleysDone = StagePatch.BusinessesDone = StagePatch.HomeDone = StagePatch.HomeFinished = false;
         Decor.Reset();
+        Echelons.Restore();
         Home.Restore();
         Businesses.Planned.Clear();
         AddressWealthPatch.Count = 0;

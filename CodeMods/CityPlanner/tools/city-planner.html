@@ -284,6 +284,7 @@ textarea { width: 100%; min-height: 170px; font: 12px/1.45 var(--mono); backgrou
     <label>Blocks wide <input id="inW" type="number" min="3" max="14" step="1"></label>
     <label>Blocks tall <input id="inH" type="number" min="3" max="14" step="1"></label>
     <label>Population <input id="inPop" type="number" min="0.1" max="2" step="0.05"></label>
+    <label title="The top floors of some towers are Echelon floors: a fixed luxury look, and you're trespassing there without the right sync disk or a guest pass. Untick to build them as ordinary floors."><input id="inEch" type="checkbox" checked> Echelon floors</label>
     <div id="streetBrush" class="seg" role="radiogroup" aria-label="Street type" hidden>
       <button type="button" data-st="main" class="on"><span class="swatchline sw-main"></span>Main road</button>
       <button type="button" data-st="back"><span class="swatchline sw-back"></span>Back street</button>
@@ -503,6 +504,7 @@ function parsePlan(text) {
       const k = line.slice(0, kv).trim().toLowerCase(), v = line.slice(kv + 1).trim();
       if (k === "size") { const [a, b] = v.toLowerCase().split("x").map(Number); out.w = a; out.h = b; }
       if (k === "population") out.pop = parseFloat(v);
+      if (k === "echelons") out.echelons = !/^(off|false|no)$/i.test(v);
     } else if (section === "districts" && kv > 0) {
       const key = line.slice(0, kv).trim();
       const p = line.slice(kv + 1).split("|").map(s => s.trim());
@@ -656,7 +658,7 @@ function planText() {
   const lines = [
     "# City plan for City Planner (made with the City Planner page).",
     "", `# Size includes the waterfront ring the game builds: ${state.w - 2} x ${state.h - 2} blocks to plan.`,
-    "[City]", `Size = ${state.w}x${state.h}`, `Population = ${state.pop}`, "",
+    "[City]", `Size = ${state.w}x${state.h}`, `Population = ${state.pop}`, ...(state.echelons === false ? ["Echelons = off"] : []), "",
     "# Districts: letter = name | district type | land value | density", "[Districts]",
     ...state.districts.map(d => `${d.key} = ${pad(d.name, nameW)} | ${pad(d.type, typeW)} | ${pad(LV[d.lv], 8)} | ${DEN[d.den]}`),
     "", "[Buildings]", ...Object.entries(B).map(([k, v]) => `${k} = ${v.preset}`),
@@ -918,7 +920,7 @@ function render() {
     $("homeUnit").value = state.home ? state.home.number : "";
   }
   $("homeStatus").textContent = state.home ? `Set: ${colName(state.home.col - 1)}${state.home.row}, apartment ${state.home.number}.` : "No apartment chosen: the game picks yours.";
-  $("inW").value = state.w - 2; $("inH").value = state.h - 2; $("inPop").value = state.pop;
+  $("inW").value = state.w - 2; $("inH").value = state.h - 2; $("inPop").value = state.pop; $("inEch").checked = state.echelons !== false;
   if (document.activeElement !== $("planText")) $("planText").value = planText();
   save();
 }
@@ -1340,6 +1342,7 @@ function resize(w, h) {
 // The inputs count the blocks you plan; the plan's Size also counts the waterfront ring around them.
 $("inW").addEventListener("change", e => resize(+e.target.value + 2, state.h));
 $("inH").addEventListener("change", e => resize(state.w, +e.target.value + 2));
+$("inEch").addEventListener("change", e => { if (e.target.checked) delete state.echelons; else state.echelons = false; render(); });
 $("inPop").addEventListener("change", e => { state.pop = Math.max(0.1, Math.min(2, Math.round(+e.target.value * 100) / 100 || 0.75)); render(); });
 
 $("homeSet").addEventListener("click", () => {

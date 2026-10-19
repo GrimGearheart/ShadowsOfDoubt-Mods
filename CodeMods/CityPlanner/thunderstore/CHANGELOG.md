@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- **No Echelons, if you like:** untick *Echelon floors* in the planner and the towers' top floors are built as ordinary floors, with normal apartments and decor and no trespassing rules. It's baked into the city, so it holds without City Planner. In the plan it's `Echelons = off` under `[City]`.
+  If a city ever stops partway through generating with Echelons off, generate it again (another seed, or with Echelons on), and send me your `LogOutput.log`.
+
 ## 1.6.0
 
 - **Dead ends:** a new *Dead end* brush in *Streets* paints an alley with a wall across its middle, so each half is a dead end, like the game's own walled-off alleys. One strip is enough. In the plan it's `= deadend`. Suggested by Tayelikel.

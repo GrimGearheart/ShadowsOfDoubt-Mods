@@ -13,6 +13,7 @@ City Planner is what built [Margin City](https://thunderstore.io/c/shadows-of-do
 
 - **Size:** how many blocks wide and tall, from 3 × 3 to 14 × 14, so bigger than the game's own largest if you want. The game adds a ring of waterfront around the blocks you plan.
 - **Population:** fewer or more residents than the game would normally put in.
+- **Echelon floors:** untick *Echelon floors* and the towers' top floors are built as ordinary floors: no fixed luxury look, and no trespassing there without the right sync disk. It's baked into the city, so it holds without City Planner. In the plan it's `Echelons = off` under `[City]`.
 - **Districts:** where each one is, its name, its type (Residential, CBD, Chinatown, Red Light, Industrial…), its wealth and its density.
 - **Buildings (optional):** which building goes on each tile, and which side its front faces. Tiles left on *game decides* get a building the game picks for that district.
 - **Businesses (optional):** choose what goes in a building's shop units: the bar on the corner, the pharmacy next door, the gambling den in the basement. Units you leave alone are filled by the game.

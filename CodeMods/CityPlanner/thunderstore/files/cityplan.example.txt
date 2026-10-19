@@ -7,6 +7,7 @@
 [City]
 Size = 9x10
 Population = 0.75
+# Echelons = off   (build the towers' top floors as ordinary floors)
 
 # Districts: letter = name | district type | land value | density
 [Districts]
