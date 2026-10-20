@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- **Fixed the purple laser screen** still showing at the entrance to the old Echelon floors in cities built with *Echelon floors* off. The screen switches itself on by floor number, not by whether the floor is an Echelon floor; it now stays off on ordinary floors. This part needs City Planner installed while you play. Reported by Tayelikel.
+
 ## 1.7.0
 
 - **No Echelons, if you like:** untick *Echelon floors* in the planner and the towers' top floors are built as ordinary floors, with normal apartments and decor and no trespassing rules. It's baked into the city, so it holds without City Planner. In the plan it's `Echelons = off` under `[City]`.

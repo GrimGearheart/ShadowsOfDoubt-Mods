@@ -1,3 +1,5 @@
+using HarmonyLib;
+
 namespace CityPlanner;
 
 /// <summary>
@@ -35,5 +37,26 @@ internal static class Echelons
         if (!switchedOff) return;
         if (Game.Instance != null) Game.Instance.allowEchelons = true;
         switchedOff = false;
+    }
+
+    /// <summary>
+    /// The laser screen at the entrance to the Echelons. It's part of an object every floor of those towers has, and when
+    /// it appears (as you get near) it switches itself on by floor number, not by whether the floor is an Echelon floor.
+    /// So on a city built without Echelons it would still light up on what are now ordinary floors. Here it removes
+    /// itself, as it does below the Echelons, when its floor isn't an Echelon floor. Needs City Planner installed; cities
+    /// with Echelons (any city the game makes) are unaffected, since their Echelon floors are marked as such.
+    /// </summary>
+    [HarmonyPatch(typeof(EchelonsLaserScreenController), nameof(EchelonsLaserScreenController.Setup))]
+    private static class LaserScreenPatch
+    {
+        private static bool Prefix(EchelonsLaserScreenController __instance, InteractableController newController)
+        {
+            var floor = newController?.interactable?.node?.gameLocation?.thisAsAddress?.floor;
+            if (floor == null || floor.isEchelons || SessionData.Instance == null || SessionData.Instance.isFloorEdit) return true;
+            var building = newController.interactable.node.building;
+            if (building?.preset == null || !building.preset.buildingFeaturesEchelonFloors || floor.floor < building.preset.echelonFloorStart) return true;
+            UnityEngine.Object.Destroy(__instance.gameObject);
+            return false;
+        }
     }
 }
