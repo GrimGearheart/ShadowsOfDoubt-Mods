@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>Proprietor</AssemblyName>
     <RootNamespace>Proprietor</RootNamespace>
-    <Version>1.3.0</Version>
+    <Version>1.5.0</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -29,6 +29,7 @@
     <Reference Include="$(BepInExDir)\interop\FMODUnity.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\UnityEngine.PhysicsModule.dll" Private="false" />
     <Reference Include="$(BepInExDir)\interop\Rewired_Core.dll" Private="false" />
+    <Compile Include="..\Shared\DialogGuard.cs" Link="Shared\DialogGuard.cs" />
   </ItemGroup>
 
   <Target Name="DeployToPlugins" AfterTargets="Build">

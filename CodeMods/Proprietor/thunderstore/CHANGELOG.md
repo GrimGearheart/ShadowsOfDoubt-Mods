@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0
+
+- **Shops are for sale.** Pawn shops, hardware stores and chemists can be bought from their owners like any diner or bar.
+- **Shoppers.** Nobody in the city goes shopping for goods on their own, so a shop you own now gets its own customers: about six a day (`Retail.ShoppersPerDay`), busiest in the afternoon. When you're nearby, people from the street walk in, go to the counter and buy something; when you're elsewhere, the sales still happen. Every sale goes in the till, the ledger and the shop's sales records.
+- **Killers shop too.** A murderer buying a weapon at your shop shows up in your ledger, and is never turned away.
+
+## 1.4.0
+
+- **On the house.** Food and drink on the menu at a business you own is free for you (it still comes out of the stock).
+- **Deliveries you can see.** Orders now arrive as a wooden crate in the stockroom, back room or kitchen (never out front), and the staff unpack it over a few hours of their shifts (`Stock.DeliveryCrates`).
+- **A full till is a target.** Leave more than ¢4,000 in a till and it may be robbed overnight: a break-in at places that close, a hold-up at places that don't. The thief takes most of it, and your manager reports it the next morning. The risk grows the more you leave (`Robbery` settings; set `NightlyChance` to 0 to turn it off).
+- Fixed: the buy, sell and manager options could disappear from conversations after loading a second save without restarting the game.
+
 ## 1.3.0
 
 - **Managers report by vmail.** Each morning every manager vmails you a report (wages, deliveries, restocking, what's low or out, how the customers seem), replacing the pile of pop-ups at midnight and 7am. One message tells you the reports are in. The last week of reports is kept.

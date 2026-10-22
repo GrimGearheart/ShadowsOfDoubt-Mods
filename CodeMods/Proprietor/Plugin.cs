@@ -14,7 +14,7 @@ namespace Proprietor;
 /// earn money into the till, use up stock, and you run it all from the "Business Ledger" program on the
 /// business's cruncher: collect the till, check stock, order more (delivered in a few days), see every sale.
 /// </summary>
-[BepInPlugin(Guid, "Under New Management", "1.3.0")]
+[BepInPlugin(Guid, "Under New Management", "1.5.0")]
 [BepInDependency("Venomaus.SOD.Common")]
 public class Plugin : BasePlugin
 {
@@ -25,7 +25,11 @@ public class Plugin : BasePlugin
     internal static ConfigEntry<float> WholesaleShare, TransferFee, TransferHour, TypicalMenuPrice, SellBackShare;
     internal static ConfigEntry<int> LowStock, ManagerRaise, DepositStep;
     internal static ConfigEntry<float> DemandPerRegular, DaysOfStock, LoseChance, WinChance;
-    internal static ConfigEntry<bool> LogEachSale, KeepFloat;
+    internal static ConfigEntry<int> RobberySafe, RobberyDanger;
+    internal static ConfigEntry<float> RetailShoppersPerDay;
+    internal static ConfigEntry<string> RetailShopTypes;
+    internal static ConfigEntry<float> RobberyChance, RobberyMinShare, RobberyMaxShare;
+    internal static ConfigEntry<bool> LogEachSale, KeepFloat, DeliveryCrates, FreeForOwner;
     internal static ConfigEntry<int> TestStock, TestStartingStock;
     internal static ConfigEntry<float> TestDeliveryHours;
 
@@ -54,6 +58,8 @@ public class Plugin : BasePlugin
         WholesaleShare = Config.Bind("Stock", "WholesaleShare", 0.3f, "What stock costs you, as a share of its menu price (0.3 = 30%).");
         MinDeliveryDays = Config.Bind("Stock", "MinDeliveryDays", 1, "Fewest in-game days an order takes to arrive.");
         MaxDeliveryDays = Config.Bind("Stock", "MaxDeliveryDays", 3, "Most in-game days an order takes to arrive.");
+        DeliveryCrates = Config.Bind("Stock", "DeliveryCrates", true,
+            "Deliveries arrive as a crate in the stockroom (or back room or kitchen) that staff unpack over a few hours.");
         LowStock = Config.Bind("Stock", "LowStockWarning", 5, "The home ledger warns about items with this many or fewer left.");
         TransferFee = Config.Bind("Remote", "TransferFee", 0.1f,
             "Share of the till a courier keeps when you send it home from your apartment's cruncher (0.1 = 10%). 0 = free.");
@@ -62,12 +68,24 @@ public class Plugin : BasePlugin
             "Daily raise for a manager who handles restocking (offer it in conversation). Paid with the wages.");
         KeepFloat = Config.Bind("Running", "KeepFloat", true,
             "COLLECT and TRANSFER leave a float in the till: a day's wages, plus a day's stock if the manager restocks. false = take everything.");
+        FreeForOwner = Config.Bind("Running", "FreeForOwner", true,
+            "Anything on the menu at a business you own is free for you (it still comes out of the stock).");
         DepositStep = Config.Bind("Running", "DepositStep", 100, "How much each press of DEPOSIT in the ledger moves from your wallet into the till.");
         WagePerStaff = Config.Bind("Running", "WagePerStaff", 8, "Paid out of the till every in-game day, per job at the business.");
         LoseChance = Config.Bind("Regulars", "LoseChance", 0.33f,
             "Each time a regular is turned away (nothing they wanted in stock), the chance they leave for the nearest rival that night. 0 = regulars never leave.");
         WinChance = Config.Bind("Regulars", "WinChance", 0.05f,
             "Chance a customer who isn't a regular makes your business their favourite after buying something, if nobody was turned away there in the last day. 0 = off.");
+        RetailShopTypes = Config.Bind("Retail", "ShopTypes", "PawnShop,HardwareStore,Chemist",
+            "Comma-separated shop types that can be bought and get shoppers (the game's company preset names).");
+        RetailShoppersPerDay = Config.Bind("Retail", "ShoppersPerDay", 6f,
+            "How many shoppers come into a shop you own on an average day (spread over its opening hours). 0 = none.");
+        RobberySafe = Config.Bind("Robbery", "SafeLimit", 4000, "A till holding no more than this is never robbed.");
+        RobberyDanger = Config.Bind("Robbery", "DangerLimit", 5000,
+            "At this much in the till, the nightly chance of a robbery reaches NightlyChance (it rises from 0 at SafeLimit, and keeps rising above this).");
+        RobberyChance = Config.Bind("Robbery", "NightlyChance", 0.35f, "Chance of a robbery each night at DangerLimit. 0 = robberies off.");
+        RobberyMinShare = Config.Bind("Robbery", "MinShareTaken", 0.6f, "Smallest share of the till a robber takes.");
+        RobberyMaxShare = Config.Bind("Robbery", "MaxShareTaken", 0.9f, "Largest share of the till a robber takes.");
         LogEachSale = Config.Bind("Debug", "LogEachSale", false, "Write every sale at a business to the log.");
         TestStock = Config.Bind("Debug", "TestStock", -1,
             "Testing: when a save loads, set every item at your businesses to this many in stock. -1 = off.");
@@ -78,15 +96,19 @@ public class Plugin : BasePlugin
 
         MigrateConfig(oldConfig);
 
-        Lib.SaveGame.OnBeforeLoad += (_, _) => { DecorPatch.Return(); Reports.Clear(); Loyalty.Revert(); };
-        Lib.SaveGame.OnAfterLoad += (_, args) => { Loyalty.Load(args); Store.Load(args); Reports.Restore(); };
+        Lib.SaveGame.OnBeforeLoad += (_, _) => { DecorPatch.Return(); Reports.Clear(); Crates.Forget(); Loyalty.Revert(); };
+        Lib.SaveGame.OnAfterLoad += (_, args) => { Loyalty.Load(args); Store.Load(args); Reports.Restore(); Crates.Restore(); };
         // A business lent to the decor editor is never saved as one of your apartments.
         Lib.SaveGame.OnBeforeSave += (_, _) => { DecorPatch.Return(); Reports.Detach(); };
         Lib.SaveGame.OnAfterSave += (_, args) => { Store.Save(args); Loyalty.Save(args); Reports.Reattach(); };
-        Lib.SaveGame.OnBeforeNewGame += (_, _) => { DecorPatch.Return(); Reports.Clear(); Loyalty.Revert(); Store.Clear(); };
+        Lib.SaveGame.OnBeforeNewGame += (_, _) => { DecorPatch.Return(); Reports.Clear(); Crates.Forget(); Loyalty.Revert(); Store.Clear(); };
         Lib.Time.OnMinuteChanged += (_, _) => Safely("arrivals", Store.CheckArrivals);
         Lib.Time.OnDayChanged += (_, _) => Safely("wages", Store.PayWages);
         Lib.Time.OnDayChanged += (_, _) => Safely("regulars", Loyalty.Midnight);
+        Lib.Time.OnHourChanged += (_, _) => Safely("crates", Crates.Hourly);
+        Lib.Time.OnHourChanged += (_, args) => Safely("shoppers", () => Retail.Hourly(args.Current.Hour));
+        Lib.Time.OnMinuteChanged += (_, _) => Safely("shoppers", Retail.Minutely);
+        Lib.Time.OnHourChanged += (_, args) => Safely("robbery", () => Robbery.Hourly(args.Current.Hour));
         Lib.Time.OnHourChanged += (_, args) => Safely("off-screen trade", () => Trade.Hourly(args.Current.Hour));
         Lib.Time.OnHourChanged += (_, args) => Safely("restock", () => Restock.BeforeClosing(args.Current.Hour));
         Lib.Time.OnHourChanged += (_, args) => Safely("morning reports", () => Restock.Morning(args.Current.Hour));
@@ -95,6 +117,7 @@ public class Plugin : BasePlugin
         new Harmony(Guid).PatchAll(typeof(Plugin).Assembly);
         Dialogs.Register();
         Restock.Register();
+        ProtectorateShared.DialogGuard.Protect();
         Log.LogInfo("Under New Management loaded");
     }
 

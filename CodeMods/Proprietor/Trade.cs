@@ -103,7 +103,7 @@ internal static class Trade
     }
 
     /// <summary>Whether the business's opening hours include this hour of the day.</summary>
-    private static bool OpenAt(Company c, int h)
+    internal static bool OpenAt(Company c, int h)
     {
         var open = c.retailOpenHours.x % 24f;
         var close = c.retailOpenHours.y % 24f;

@@ -67,6 +67,8 @@ public class Business
     public List<string> Notes { get; set; } = new();
     public Dictionary<string, int> Delivered { get; set; } = new();
     public bool BadNews { get; set; }
+    /// <summary>Delivery crates waiting to be unpacked.</summary>
+    public List<Crate> Crates { get; set; } = new();
     /// <summary>The last week of the manager's reports (vmails).</summary>
     public List<Report> Reports { get; set; } = new();
 }
@@ -84,6 +86,7 @@ internal static class Store
     {
         LedgerApp.Reset();
         SupermarketPatch.Reset();
+        Retail.Reset();
         Owned = new Dictionary<int, Business>();
     }
 
@@ -157,6 +160,7 @@ internal static class Store
 
     public static bool HasCustomers(Company c)
     {
+        if (Retail.IsRetail(c)) return true;
         var categories = c.preset?.companyCategories;
         if (categories == null) return false;
         foreach (var (category, _) in CustomerCategories)
@@ -224,6 +228,7 @@ internal static class Store
         var b = Get(c);
         var back = Mathf.RoundToInt(b.PricePaid * Plugin.SellBackShare.Value);
         var total = Math.Max(0, back + b.Till + b.Transfers.Sum(t => t.Amount));
+        Crates.Remove(b);
         Owned.Remove(b.CompanyId);
         if (total > 0) GameplayController.Instance.AddMoney(total, true, "proprietor_sell");
         message = $"You sold {b.Name} for {Currency}{total}" +
@@ -382,6 +387,7 @@ internal static class Store
                 b.Orders.Remove(o);
             }
             var what = string.Join(", ", due.Select(o => o.Quantity + " " + ItemNamePlural(o.Item)));
+            Crates.Delivered(b, FindCompany(b.CompanyId));
             foreach (var o in due) b.Delivered[o.Item] = (b.Delivered.TryGetValue(o.Item, out var d) ? d : 0) + o.Quantity;
             Plugin.Logger.LogInfo($"{b.Name}: delivery arrived ({what})");
         }

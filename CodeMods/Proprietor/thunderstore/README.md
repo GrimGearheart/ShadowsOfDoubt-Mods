@@ -2,16 +2,18 @@
 
 Every diner, café and bar in the city has a name over the door and somebody counting the takings. Now that somebody can be you. Buy a business from its owner, keep the staff on, and make your money from the real citizens who walk in and order.
 
-**Right now it covers the places citizens go to eat and drink,** which are the businesses they visit often enough to run. More kinds of business are planned (see *What's next*).
+**Right now it covers the places citizens go to eat and drink, plus pawn shops, hardware stores and chemists.** More kinds of business are planned (see *What's next*).
 
 ## Buying a business
 
-Talk to the **owner** of a diner, café, restaurant or bar and choose **"I'd like to buy your business."** The asking price is shown on the option, and it's greyed out if you can't afford it. If the owner isn't around, any **staff member on shift** can phone them for you.
+Talk to the **owner** of a diner, café, restaurant, bar or shop (pawn shop, hardware store or chemist) and choose **"I'd like to buy your business."** The asking price is shown on the option, and it's greyed out if you can't afford it. If the owner isn't around, any **staff member on shift** can phone them for you.
 
 The price depends on:
 - **Regular customers.** These are the citizens whose favourite place it is for a meal, a snack, coffee or a drink. A busy place costs more than a quiet one.
 - **The neighbourhood.** The same diner costs more uptown than in the slums.
 - **The menu.** Places with pricier menus cost more, and earn more.
+
+Shops have no regulars (nobody has a favourite hardware store), so their price comes from the neighbourhood and what's on the shelves.
 
 The **owner stays on as your manager**, and the staff keep their jobs. Nothing about the place changes except who gets the money. You also get:
 - **Keys** to every door.
@@ -24,13 +26,17 @@ Every sale is real. When a citizen orders a burger at your diner, the money goes
 
 - **Stock.** A new business comes with a couple of orders' worth of each menu item. When something runs out, customers can't order it, and when nothing they want is left, they walk out. Those are counted as *turned away*.
 - **Orders.** Restock on the cruncher. Order sizes follow how busy the place is (a few days of that item's expected sales). You pay up front (30% of the menu price, from the till first, then your wallet), and the delivery arrives in 1 to 3 days. Press ORDER again for more.
+- **Deliveries.** An order turns up as a wooden crate in the stockroom (or the back room, or the kitchen), and the staff unpack it over a few hours of their shifts. The stock is yours the moment it arrives.
 - **Wages.** At midnight the staff are paid out of the till (vacant positions cost nothing). If the till is short, the rest comes from your wallet.
 - **A manager who restocks.** Tell the manager (or have staff on shift call them) *"I'll give you a raise if you handle the restocking."* The raise is paid with the wages, and an hour before closing (11pm for places that never close) the manager tops up anything running low, by what it actually sold lately, paid from the day's takings. They never spend the money set aside for wages. Changed your mind? Tell them they can go back to their old pay.
 - **The manager's report.** Every morning at 7, each manager vmails you: last night's wages, deliveries, what they ordered, what's running low or out, and anything they've noticed about the customers. Read it on your home cruncher. One message lets you know the reports are in.
 - **Regulars.** Every citizen has a favourite place for a meal, a snack, coffee and a drink. Turn a regular away with empty shelves and they may start going somewhere else; keep the place stocked and newcomers may make it their favourite. Nobody announces it, but a good manager notices.
+- **Shoppers.** Nobody in the city goes shopping for goods on their own, so a shop you own gets its own customers: about six a day, busiest in the afternoon. When you're nearby they're real people from the street outside who walk in, go to the counter and buy something (cheaper things sell more often, and wealthier people go for pricier items). When you're elsewhere the sales still happen. Each sale goes in the till, the ledger and the shop's own sales records. Nobody shops at your place more than once a day.
+- **Killers shop too.** If a murderer buys their weapon at your shop, it shows up in your ledger like any sale, and in the shop's sales records the way it always would. They're never turned away, even if you're out of stock.
 - **Business doesn't stop when you leave.** The game simulates citizens across town less than the ones around you, so a business you're far from would sell a fraction of what it sells with you nearby. The mod makes up the difference from the business's own regulars (using its real stock), so your businesses earn the same wherever you are.
 - **Opening hours.** Businesses keep their own hours; a late-night bar or eatery may not open until midday. The ledger tells you whether a place is open and who's in.
 - **After hours.** You can stay inside your own business at closing time: the staff lock up and go home around you (and if they've already left, the place is closed up for them). Waiting with your watch isn't interrupted.
+- **Don't leave too much in the till.** Once a till holds more than ¢4,000, it starts to attract attention. Each night there's a growing chance someone breaks in (or holds up the counter at a place that never closes) and takes most of it. Never while you're inside. Your manager will tell you about it in the morning.
 - **Selling.** Changed your mind? Tell the manager, or staff on shift, that you want to sell. You get back 60% of what you paid, plus whatever's in the till.
 
 ## Making it yours
@@ -38,6 +44,7 @@ Every sale is real. When a citizen orders a burger at your diner, the money goes
 - **Decorate.** Inside a business you own, the **Edit Decor** button works just like at home (sandbox games, or the story once you have your apartment). Repaint walls, floors and ceilings room by room, and buy and place your own furniture.
 - **The fittings stay.** Counters, registers, tables, seats, menu boards and the rest are what your staff and customers use, so they can't be moved, stored or sold. Litter, junk and cardboard boxes can be cleared out.
 - **Lit ceilings.** Some places, like diners, have glowing ceiling panels. Paint one and it glows in the Multiply colour you choose; pick black to switch the glow off.
+- **On the house.** Anything on the menu at your own place is free for you. It still comes out of the stock.
 - **The staff know who you are.** Waiters, bar staff and counter staff greet you as their boss. Not enthusiastically.
 
 Shared spaces next door, like a building's public bathrooms, aren't part of your business and can't be decorated.
@@ -59,10 +66,7 @@ A new program on the cruncher, in two places:
 ## What's next
 
 Planned for future versions:
-- **Shops.** Pawn shops, hardware stores and other retail. The game has no errand that sends citizens shopping there, so they need new shoppers first.
 - **Supermarkets.** Grocery runs are rare in the game, so they need a different kind of deal to be worth owning.
-- **Deliveries you can see:** crates turning up in the stockroom or back room.
-- **A full till as a target.** Leave too much cash in the register and someone may come for it.
 
 ## Bugs and feedback
 
@@ -82,17 +86,23 @@ After the first launch, edit `BepInEx/config/sodmods.proprietor.cfg` (or use r2m
 | `Stock.MinOrder` / `MaxOrder` | 10 / 100 | Smallest and largest order |
 | `Stock.WholesaleShare` | 0.3 | What stock costs you, as a share of the menu price |
 | `Stock.MinDeliveryDays` / `MaxDeliveryDays` | 1 / 3 | How long orders take |
+| `Stock.DeliveryCrates` | true | Deliveries show up as a crate for the staff to unpack |
 | `Running.WagePerStaff` | 8 | Daily wage per member of staff |
 | `Running.ManagerRaise` | 25 | Daily raise for a manager who handles restocking |
 | `Running.KeepFloat` | true | COLLECT and TRANSFER leave a day's wages in the till |
 | `Regulars.LoseChance` | 0.33 | Chance a regular turned away leaves for a rival |
 | `Regulars.WinChance` | 0.05 | Chance a new customer becomes a regular (if nobody was turned away that day) |
+| `Running.FreeForOwner` | true | Menu items are free for you at your own businesses |
 | `Running.DepositStep` | 100 | How much each DEPOSIT press puts in the till |
+| `Robbery.SafeLimit` / `DangerLimit` | 4000 / 5000 | Tills above the safe limit can be robbed; the risk reaches its nightly chance at the danger point |
+| `Robbery.NightlyChance` | 0.35 | Chance of a robbery each night at the danger point (0 = off) |
+| `Retail.ShoppersPerDay` | 6 | Shoppers a shop you own gets on an average day |
+| `Retail.ShopTypes` | PawnShop, HardwareStore, Chemist | Shop types that can be bought and get shoppers (the game's preset names, comma-separated) |
 | `Remote.TransferFee` | 0.1 | The courier's cut when you transfer from home (0 = free) |
 
 ## Safe to remove?
 
-**Yes.** What you own is kept in small files next to each save, not in the save itself. Without the mod your businesses simply go back to their owners, citizens go back to their original favourite places, and the managers' reports disappear from your vmail (they're never written into the save). Money earned or spent stays, and the keys you were given stay on your keyring. Decorating you've done stays too (the game saves it with the rooms), and lit ceilings you painted go back to glowing white.
+**Yes.** What you own is kept in small files next to each save, not in the save itself. Without the mod your businesses simply go back to their owners, citizens go back to their original favourite places, the managers' reports disappear from your vmail, and any delivery crates waiting to be unpacked are gone (neither is ever written into the save). Money earned or spent stays, and the keys you were given stay on your keyring. Decorating you've done stays too (the game saves it with the rooms), and lit ceilings you painted go back to glowing white.
 
 ## Compatibility
 
